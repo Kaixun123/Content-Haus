@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  #########################
+  # Categorise Microservice
+  #########################
+  categorise:
+    build:
+      context: ./services/categorise
+      dockerfile: Dockerfile
+    container_name: categorise
+    ports: 
+      - 5001:80
+    networks:
+      - backend_network
+
+  #########################
+  # Vectorise Microservice
+  #########################
+  vectorise:
+    build:
+      context: ./services/vectorise
+      dockerfile: Dockerfile
+    container_name: vectorise
+    ports: 
+      - 5002:80
+    networks:
+      - backend_network
+
+networks:
+  backend_network:
+    driver: bridge
