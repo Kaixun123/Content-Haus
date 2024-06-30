@@ -1,16 +1,25 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
+import os
+import uvicorn
 
-from scraper.scraper import setup_webdriver, search_tiktok, extract_video_metadata, store_data
+from scraper.scraper import fetch_hashtag_videos, fetch_trending_videos
+from response.VideoResponse import VideoResponse
 
 app = FastAPI()
 
-@app.get("/")
-async def root():
-    keyword = "funny"  # Replace with desired category keyword
-    driver = setup_webdriver()
-    page_source = search_tiktok(driver, keyword)
-    videos = extract_video_metadata(page_source)
-    store_data(videos, f'tiktok_{keyword}_videos.json')
-    driver.quit()
-    print(f"Scraped {len(videos)} videos for keyword '{keyword}'")
-    # return {"message": "Hello World"}
+@app.get("/trending", response_model=VideoResponse)
+async def trending_videos(response: Response):
+    result = await fetch_trending_videos()
+    if result.error:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    return result
+
+@app.get("/hashtag", response_model=VideoResponse)
+async def root(response: Response):
+    result = await fetch_hashtag_videos()
+    if result.error:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    return result
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
