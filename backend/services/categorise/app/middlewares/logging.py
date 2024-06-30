@@ -37,12 +37,9 @@ class LoggingMiddleware(Middleware):
 
     def apply(self):
         """
-        Private method to apply logging middleware settings to the FastAPI application.
+        Method to apply logging middleware settings to the FastAPI application.
         This method configures the application to log details of HTTP requests including
         method, path, and duration of the request.
-        
-        Parameters:
-            app (FastAPI): The FastAPI application to which the logging settings will be applied.
         """
         @self.__app.middleware("http")
         async def log_request_middleware(request: Request, call_next):
