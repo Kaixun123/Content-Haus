@@ -9,6 +9,7 @@ ms_token=<ms_token_value> # Get this from tiktok.com cookies after logging in
 ### 1.2 Install prerequisites
 ```
 pip install requirements.txt
+playwright install
 ```
 
 ## 2. Running the function
