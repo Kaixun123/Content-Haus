@@ -2,11 +2,7 @@ from TikTokApi import TikTokApi
 import asyncio
 from playwright.async_api import async_playwright
 from yt_dlp import YoutubeDL
-from yt_dlp.postprocessor.common import PostProcessor
-from yt_dlp.utils import sanitize_filename
-
 import os
-
 from response.VideoResponse import VideoResponse
 
 
@@ -20,18 +16,31 @@ async def fetch_hashtag_videos():
         async with TikTokApi() as api:
             await api.create_sessions(ms_tokens=[ms_token], num_sessions=1, sleep_after=3, 
                                   headless=False, suppress_resource_load_types=["image", "media", "font", "stylesheet"])
-            videos = []
+            videos_info = []
             # FROM: https://github.com/davidteather/TikTok-Api/issues/1040
-            async for video in api.hashtag(name="funny").videos(count=5):
+            async for video in api.hashtag(name="funny").videos(count=20):
                 print("username: " + video.author.username)
                 print("video id: " + video.id)
                 print("stats: " + str(video.stats))
 
-                video_link = "https://www.tiktok.com/@" + video.author.username + "/video/" + video.id
-                videos.append(video_link)
+                video_info = {
+                    "link": "https://www.tiktok.com/@" + video.author.username + "/video/" + video.id,
+                    "views": video.stats['playCount'],
+                    "author": video.author.username,
+                }
+
+                videos_info.append(video_info)
+
+            # Sort videos by view count in descending order
+            videos_info_sorted = sorted(videos_info, key=lambda x: x['views'], reverse=True)
+
+            videos = []
+            # Only download the top 10 videos
+            for vid in videos_info_sorted[:10]:  # Limit to top 10
+                videos.append(vid['link'])
                 with YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([video_link])
-            
+                    ydl.download([vid['link']])
+                
             return VideoResponse(error=False, urls=videos)
 
 async def fetch_trending_videos():
@@ -39,23 +48,36 @@ async def fetch_trending_videos():
         async with TikTokApi() as api:
             await api.create_sessions(ms_tokens=[ms_token], num_sessions=1, sleep_after=3, 
                                   headless=False, suppress_resource_load_types=["image", "media", "font", "stylesheet"])
-            videos = []
+            videos_info = []
             # FROM: https://github.com/davidteather/TikTok-Api/issues/1040
-            async for video in api.trending.videos(count=5):
+            async for video in api.trending.videos(count=20):
                 print("username: " + video.author.username)
                 print("video id: " + video.id)
                 print("stats: " + str(video.stats))
 
 
-                video_link = "https://www.tiktok.com/@" + video.author.username + "/video/" + video.id
-                videos.append(video_link)
+                video_info = {
+                    "link": "https://www.tiktok.com/@" + video.author.username + "/video/" + video.id,
+                    "views": video.stats['playCount'],
+                    "author": video.author.username,
+                }
+
+                videos_info.append(video_info)
+
+            # Sort videos by view count in descending order
+            videos_info_sorted = sorted(videos_info, key=lambda x: x['views'], reverse=True)
+
+            videos = []
+            # Only download the top 10 videos
+            for vid in videos_info_sorted[:10]:  # Limit to top 10
+                videos.append(vid['link'])
                 with YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([video_link])
+                    ydl.download([vid['link']])
                 
             return VideoResponse(error=False, urls=videos)
 
 async def fetch_username_videos():
-    async with async_playwright():
+    async with async_playwright() as playwright:
         async with TikTokApi() as api:
             await api.create_sessions(ms_tokens=[ms_token], num_sessions=1, sleep_after=3, 
                                       headless=False, suppress_resource_load_types=["image", "media", "font", "stylesheet"])
@@ -64,11 +86,11 @@ async def fetch_username_videos():
                 print("username: " + video.author.username)
                 print("video id: " + video.id)
                 print("stats: " + str(video.stats))
-                print(video.desc)
 
                 video_info = {
                     "link": "https://www.tiktok.com/@" + video.author.username + "/video/" + video.id,
-                    "views": video.stats['playCount']  # Assuming 'playCount' is the key for views
+                    "views": video.stats['playCount'],
+                    "author": video.author.username,
                 }
                 videos_info.append(video_info)
 
@@ -76,11 +98,24 @@ async def fetch_username_videos():
             videos_info_sorted = sorted(videos_info, key=lambda x: x['views'], reverse=True)
 
             videos = []
-            # ydl_opts = {}  # Define your YoutubeDL options here
             # Only download the top 10 videos
-            for video_info in videos_info_sorted[:10]:  # Limit to top 10
-                videos.append(video_info['link'])
+            for vid in videos_info_sorted[:10]:  # Limit to top 10
+                videos.append(vid['link'])
                 with YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([video_info['link']])
+                    ydl.download([vid['link']])
+                
                 
             return VideoResponse(error=False, urls=videos)
+
+#to test and experiement
+async def user_example():
+    async with TikTokApi() as api:
+        await api.create_sessions(ms_tokens=[ms_token], num_sessions=1, sleep_after=3, 
+                                      headless=False, suppress_resource_load_types=["image", "media", "font", "stylesheet"])
+        user = api.user("therock")
+        user_data = await user.info()
+        print(user_data)
+
+        async for video in user.videos(count=30):
+            print(video)
+            print(video.as_dict)
