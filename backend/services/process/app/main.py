@@ -1,52 +1,75 @@
-from fastapi import FastAPI
+import os
+import boto3
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-# from app.middlewares.logging import LoggingMiddleware
-# from app.middlewares.cors import CorsMiddleware
-# from backend.services.process.app.api.v1.process import VectoriseRestController
-
-# export TESSDATA_PREFIX=/usr/local/Cellar/tesseract/5.4.1/share/
-
-# from services.extract import extract_text_from_frames, extract_frames
-# from services.transcribe import extract_audio, transcribe_audio
+from pydantic import BaseModel
 from services.gemini_llm import GeminiLLM
+
 app = FastAPI()
 
 # Maybe TODO: Move registration of middlewares to separate module
 # LoggingMiddleware(app)
 # CorsMiddleware(app)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this as needed
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Maybe TODO: Move registration of routers to separate module
-# app.include_router(VectoriseRestController().get_router())
 
-# TODO: Create app router that takes in video UUID. 
+# Instantiate s3 client
+# TODO: Use Env
+s3_client = boto3.client('s3')
+BUCKET_NAME = 'tiktok-techjam-storage'
+
+
+# Instantiate LLM
+llm = GeminiLLM(
+    location="asia-southeast1",
+    project="tiktok-techjam-2024",
+    model_name="gemini-1.5-flash-001"
+)
+
+
+# Pydantic Model for Video Requests
+class VideoRequest(BaseModel):
+    key: str
+
+# Prompt configuration
+configured_prompt = "Analyse this video, and come up with a storyboard for recreating this video. It should be engaging and appeal to users."
+
 # This UUID to be stored as key in cloud bucket.
-# Download video from bucket, run it through extract, and transcribe, then use LLM to classify
+@app.post("/process-video/")
+async def process_video(request: VideoRequest):
+    video_key = request.key
+    local_video_path = f"/tmp/{video_key.split('/')[-1]}"
+
+    # Download video from S3
+    try:
+        s3_client.download_file(BUCKET_NAME, video_key, local_video_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading video: {e}")
+
+    # Run the Gemini model on the video
+    try:
+        output = llm.generate_content(local_video_path, configured_prompt)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing video: {e}")
+
+    # Delete the video locally
+    try:
+        os.remove(local_video_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting local video: {e}")
+
+    return {"message": "Video processed successfully", "output": output}
+
+
 if __name__ == "__main__":
-    # TODO: Read from .env file
-    llm = GeminiLLM(location="asia-southeast1",
-                    project="tiktok-techjam-2024",
-                    model_name="gemini-1.5-flash-001"
-    )
-
-    llm.generate_content("gs://tiktok-techjam-storage/louis.mp4", "Describe this video")
-
-
-
-    # video_path = "../data/sample_video.MP4"
-    
-    # # OCR Extraction
-    # extracted_frames = extract_frames(video_path)
-    # extracted_text = extract_text_from_frames(extracted_frames)
-
-    # # Audio Transcribe Extraction
-    # extract_audio(video_path, "../data/input/extracted_audio.wav")
-    # transcribed_text = transcribe_audio("../data/input/extracted_audio.wav")
-
-    # with open("../data/output/extracted_text.txt", "w") as text_file:
-    #     text_file.write(f"{extracted_text}\n{transcribed_text}")
-    
-    # print("text extraction complete")
-
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
     
     
 
