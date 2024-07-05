@@ -1,8 +1,10 @@
-import time
 import logging
+import time
+
 from fastapi import FastAPI, Request
 
 from app.middlewares.base import Middleware
+
 
 class LoggingMiddleware(Middleware):
     """
@@ -41,6 +43,7 @@ class LoggingMiddleware(Middleware):
         This method configures the application to log details of HTTP requests including
         method, path, and duration of the request.
         """
+
         @self.__app.middleware("http")
         async def log_request_middleware(request: Request, call_next):
             request_start_time = time.monotonic()

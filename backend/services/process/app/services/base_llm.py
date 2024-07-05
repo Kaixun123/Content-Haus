@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class BaseLLM(ABC):
     """
     Abstract base class for Language Learning Models (LLM).

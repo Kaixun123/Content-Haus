@@ -1,8 +1,11 @@
+import os
+
 import moviepy.editor as mp
 import speech_recognition as sr
 from pydub import AudioSegment
-import os
+
 from services.extract import clean_text
+
 
 def extract_audio(video_path, audio_path):
     # Ensure that audio_path exists
@@ -13,6 +16,7 @@ def extract_audio(video_path, audio_path):
     except Exception as e:
         print("ERROR: ", e)
     # os.remove(video_path)
+
 
 def transcribe_audio(audio_path):
     recognizer = sr.Recognizer()
@@ -28,7 +32,7 @@ def transcribe_audio(audio_path):
             # os.remove(wav_audio_path)
             print("Transcribed text: ", text)
             return clean_text(text)
-            
+
         # Clean up the temporary wav file
     except sr.UnknownValueError:
         print("Google Speech Recognition could not understand audio")

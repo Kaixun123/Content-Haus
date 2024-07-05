@@ -1,10 +1,11 @@
 # pip install opencv-python pytesseract pillow
 # brew install tesseract
+import re
+
 import cv2
 import pytesseract
 from PIL import Image
-import re
-import numpy as np
+
 
 def extract_frames(video_path, frame_rate=1):
     """
@@ -42,12 +43,13 @@ def extract_frames(video_path, frame_rate=1):
         # If the current frame number is a multiple of the frame rate, then add the frame to our list.
         if i % int(fps // frame_rate) == 0:
             frames.append(frame)
-    
+
     # Release the video file.
     video_capture.release()
 
     # Return the list of frames.
     return frames
+
 
 def clean_text(text):
     words = text.split()
@@ -60,9 +62,10 @@ def clean_text(text):
         if trimmed_word not in seen:
             seen.add(trimmed_word)
             result.append(trimmed_word)
-    
+
     cleaned_text = ' '.join(result)
     return cleaned_text
+
 
 def extract_text_from_frames(frames):
     """
@@ -88,5 +91,5 @@ def extract_text_from_frames(frames):
 
         # TODO: Use appropriate logging library
         print(f"Processed frame {i + 1}/{len(frames)}")
-    
+
     return clean_text(text)

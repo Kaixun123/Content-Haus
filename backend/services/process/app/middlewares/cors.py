@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.middlewares.base import Middleware
 
+
 class CorsMiddleware(Middleware):
     """
     A singleton class to apply CORS middleware to a FastAPI application.
@@ -26,7 +27,7 @@ class CorsMiddleware(Middleware):
     __origins = [
         # allow all ports from localhost.
         # TODO: to revisit this for proper CORS configuration
-        "http://localhost:*", 
+        "http://localhost:*",
     ]
 
     def __new__(cls, app: FastAPI):

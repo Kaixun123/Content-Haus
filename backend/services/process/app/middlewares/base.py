@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class Middleware(ABC):
     """
     An abstract base class that defines the interface for middleware classes.
@@ -7,7 +8,7 @@ class Middleware(ABC):
     All middleware classes inheriting from this interface must implement the
     __apply method, which applies the middleware's functionality to a FastAPI application.
     """
-    
+
     @abstractmethod
     def apply(self):
         """

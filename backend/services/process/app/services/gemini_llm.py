@@ -3,6 +3,7 @@ from vertexai.generative_models import GenerativeModel, Part
 
 from services.base_llm import BaseLLM
 
+
 class GeminiLLM(BaseLLM):
     """
     Class for the Gemini Language Learning Model (LLM).
@@ -20,10 +21,11 @@ class GeminiLLM(BaseLLM):
         """
         Registers the Gemini LLM with the specified location and project.
         """
-        print(f"Registering Gemini LLM with location: {self.location}, project: {self.project}, model_name: {self.model_name}")
+        print(
+            f"Registering Gemini LLM with location: {self.location}, project: {self.project}, model_name: {self.model_name}")
         vertexai.init(project=self.project, location=self.location)
         self.model = GenerativeModel(self.model_name)
-    
+
     def generate_content(self, video_file_uri, prompt):
         video_file = Part.from_uri(video_file_uri, mime_type="video/mp4")
         contents = [video_file, prompt]

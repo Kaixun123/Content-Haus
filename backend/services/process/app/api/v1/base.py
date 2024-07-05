@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+
 from fastapi import APIRouter
+
 
 class RestController(ABC):
     """
@@ -13,11 +15,11 @@ class RestController(ABC):
     Attributes:
         router (APIRouter): An instance of FastAPI's APIRouter, used for registering routes.
     """
-    
+
     def __init__(self):
         self.router = APIRouter()
         self.register_routes()
-    
+
     def get_router(self):
         """
         Returns the APIRouter instance associated with the controller.
