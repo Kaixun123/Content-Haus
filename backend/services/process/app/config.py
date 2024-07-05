@@ -28,7 +28,7 @@ class Config:
     """
 
     _instance = None
-    _env = None
+    _env = {}
 
     def __new__(cls, *args, **kwargs):
         """
@@ -56,18 +56,17 @@ class Config:
 
         The environment variables are loaded only if they haven't been loaded before.
         """
-        if self._env is None:
-            self._env = dotenv_values()
-            self.__set_attributes()
+        if not self._env:
+            self.__set_attributes(dotenv_values('var.env'))
 
-    def __set_attributes(self):
+    def __set_attributes(self, env):
         """
         Sets each key-value pair in _env as an attribute of the Config object.
 
         The keys are converted to lowercase to match the case of the attribute names.
         """
-        for k, v in self._env.items():
-            setattr(self, k.lower().replace('_', '.'), v)
+        for k, v in env.items():
+            self._env[k.lower().replace('_', '.')] = v
 
     def __getitem__(self, key):
         """
