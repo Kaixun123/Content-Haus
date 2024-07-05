@@ -37,6 +37,9 @@ llm = GeminiLLM(
 class VideoRequest(BaseModel):
     key: str
 
+# Credentials
+# TODO: Use env variables for Google Credentials
+
 # Prompt configuration
 configured_prompt = "Analyse this video, and come up with a storyboard for recreating this video. It should be engaging and appeal to users."
 
