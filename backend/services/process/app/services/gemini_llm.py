@@ -1,7 +1,8 @@
-import vertexai
-from vertexai.generative_models import GenerativeModel, Part
+import logging
 
+import vertexai
 from app.services.base_llm import BaseLLM
+from vertexai.generative_models import GenerativeModel, Part
 
 
 class GeminiLLM(BaseLLM):
@@ -21,7 +22,7 @@ class GeminiLLM(BaseLLM):
         """
         Registers the Gemini LLM with the specified location and project.
         """
-        print(
+        logging.info(
             f"Registering Gemini LLM with location: {self.location}, project: {self.project}, model_name: {self.model_name}")
         vertexai.init(project=self.project, location=self.location)
         self.model = GenerativeModel(self.model_name)
@@ -30,4 +31,4 @@ class GeminiLLM(BaseLLM):
         video_file = Part.from_uri(video_file_uri, mime_type="video/mp4")
         contents = [video_file, prompt]
         response = self.model.generate_content(contents)
-        print(response)
+        logging.debug(f"Response from Gemini LLM: {response}")

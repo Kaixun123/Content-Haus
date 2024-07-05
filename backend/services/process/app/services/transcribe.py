@@ -1,10 +1,10 @@
+import logging
 import os
 
 import moviepy.editor as mp
 import speech_recognition as sr
-from pydub import AudioSegment
-
 from app.services.extract import clean_text
+from pydub import AudioSegment
 
 
 def extract_audio(video_path, audio_path):
@@ -14,7 +14,7 @@ def extract_audio(video_path, audio_path):
         video = mp.VideoFileClip(video_path)
         video.audio.write_audiofile(audio_path)
     except Exception as e:
-        print("ERROR: ", e)
+        logging.warning("ERROR: ", e)
     # os.remove(video_path)
 
 
@@ -30,18 +30,18 @@ def transcribe_audio(audio_path):
             audio_data = recognizer.record(source)
             text = recognizer.recognize_google(audio_data)
             # os.remove(wav_audio_path)
-            print("Transcribed text: ", text)
+            logging.debug("Transcribed text: ", text)
             return clean_text(text)
 
         # Clean up the temporary wav file
     except sr.UnknownValueError:
-        print("Google Speech Recognition could not understand audio")
+        logging.warning("Google Speech Recognition could not understand audio")
         return None
     except sr.RequestError as e:
-        print(f"Could not request results from Google Speech Recognition service; {e}")
+        logging.warning(f"Could not request results from Google Speech Recognition service; {e}")
         return None
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.warning(f"An error occurred: {e}")
         return None
     finally:
         # Clean up the temporary wav file

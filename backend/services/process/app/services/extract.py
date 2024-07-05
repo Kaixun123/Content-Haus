@@ -1,5 +1,6 @@
 # pip install opencv-python pytesseract pillow
 # brew install tesseract
+import logging
 import re
 
 import cv2
@@ -90,6 +91,6 @@ def extract_text_from_frames(frames):
         text += "\n"
 
         # TODO: Use appropriate logging library
-        print(f"Processed frame {i + 1}/{len(frames)}")
+        logging.debug(f"Processed frame {i + 1}/{len(frames)}")
 
     return clean_text(text)

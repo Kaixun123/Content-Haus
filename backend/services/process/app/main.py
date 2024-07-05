@@ -1,15 +1,21 @@
+import logging
 import os
 
 import boto3
+from app.config import Config
+from app.services.gemini_llm import GeminiLLM
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app.config import Config
-from app.services.gemini_llm import GeminiLLM
-
 app = FastAPI()
 config = Config()
+
+logging.basicConfig(
+    level=config['log.level'],
+    format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S %Z'
+)
 
 # Maybe TODO: Move registration of middlewares to separate module
 # LoggingMiddleware(app)
