@@ -1,11 +1,15 @@
 import os
+
 import boto3
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from config import Config
 from services.gemini_llm import GeminiLLM
 
 app = FastAPI()
+config = Config()
 
 # Maybe TODO: Move registration of middlewares to separate module
 # LoggingMiddleware(app)
@@ -18,18 +22,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Instantiate s3 client
 # TODO: Use Env
 s3_client = boto3.client('s3')
-BUCKET_NAME = 'tiktok-techjam-storage'
-
+BUCKET_NAME = config['bucket.name']
 
 # Instantiate LLM
 llm = GeminiLLM(
-    location="asia-southeast1",
-    project="tiktok-techjam-2024",
-    model_name="gemini-1.5-flash-001"
+    location=config['gemini.location'],
+    project=config['gemini.project.id'],
+    model_name=config['gemini.model.name'],
 )
 
 
@@ -37,11 +39,13 @@ llm = GeminiLLM(
 class VideoRequest(BaseModel):
     key: str
 
+
 # Credentials
 # TODO: Use env variables for Google Credentials
 
 # Prompt configuration
 configured_prompt = "Analyse this video, and come up with a storyboard for recreating this video. It should be engaging and appeal to users."
+
 
 # This UUID to be stored as key in cloud bucket.
 @app.post("/process-video/")
@@ -72,7 +76,5 @@ async def process_video(request: VideoRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-    
-    
 
+    uvicorn.run(app, host="0.0.0.0", port=8000)
