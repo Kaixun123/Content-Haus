@@ -4,7 +4,7 @@ import moviepy.editor as mp
 import speech_recognition as sr
 from pydub import AudioSegment
 
-from services.extract import clean_text
+from app.services.extract import clean_text
 
 
 def extract_audio(video_path, audio_path):

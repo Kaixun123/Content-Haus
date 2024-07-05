@@ -1,7 +1,7 @@
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part
 
-from services.base_llm import BaseLLM
+from app.services.base_llm import BaseLLM
 
 
 class GeminiLLM(BaseLLM):
