@@ -57,7 +57,7 @@ class Config:
         The environment variables are loaded only if they haven't been loaded before.
         """
         if not self._env:
-            self.__set_attributes(dotenv_values('../var.env'))
+            self.__set_attributes(dotenv_values('var.env'))
 
     def __set_attributes(self, env):
         """

@@ -1,7 +1,7 @@
 import logging
 
 import vertexai
-from services.base_llm import BaseLLM
+from app.services.base_llm import BaseLLM
 from vertexai.generative_models import GenerativeModel, Part
 
 
@@ -30,5 +30,6 @@ class GeminiLLM(BaseLLM):
     def generate_content(self, video_file_uri, prompt):
         video_file = Part.from_uri(video_file_uri, mime_type="video/mp4")
         contents = [video_file, prompt]
+        print(contents)
         response = self.model.generate_content(contents)
         logging.debug(f"Response from Gemini LLM: {response}")
