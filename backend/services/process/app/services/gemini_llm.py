@@ -1,7 +1,7 @@
 import logging
 
 import vertexai
-from app.services.base_llm import BaseLLM
+from services.base_llm import BaseLLM
 from vertexai.generative_models import GenerativeModel, Part
 
 

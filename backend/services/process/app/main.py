@@ -2,8 +2,8 @@ import logging
 import os
 
 import boto3
-from app.config import Config
-from app.services.gemini_llm import GeminiLLM
+from config import Config
+from services.gemini_llm import GeminiLLM
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
