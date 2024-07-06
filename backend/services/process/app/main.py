@@ -37,15 +37,16 @@ try:
 except Exception as e:
     logging.error(f"Failed to instantiate bucket: {e}")
 
-database = DatabaseConnector()
+# Initialize the database connector
+db_connector = DatabaseConnector()
 
 @app.on_event("startup")
 async def startup():
-    await database.start_database()
+    await db_connector.start_database()
 
 @app.on_event("shutdown")
 async def shutdown():
-    await database.disconnect_database()
+    await db_connector.disconnect_database()
     
 app.include_router(ProcessController().get_router())
 
