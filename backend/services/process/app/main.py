@@ -1,12 +1,13 @@
 import json
 import logging
 
-from app.api.v1.process import ProcessController
-from app.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from google.cloud import storage
 from google.oauth2.service_account import Credentials
+
+from app.api.v1.process import ProcessController
+from app.config import Config
 
 app = FastAPI()
 config = Config()

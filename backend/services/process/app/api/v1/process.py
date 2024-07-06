@@ -1,14 +1,16 @@
 import json
 import logging
 
+from fastapi import HTTPException
+from google.oauth2.service_account import Credentials
+
 from app.api.v1.base import RestController
 from app.config import Config
 from app.models.video_request import VideoRequest
 from app.services.gemini_llm import GeminiLLM
-from fastapi import HTTPException
-from google.oauth2.service_account import Credentials
 
 config = Config()
+
 
 class ProcessController(RestController):
     configured_prompt = """

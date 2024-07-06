@@ -1,11 +1,13 @@
 import logging
 
 import vertexai
-from app.config import Config
-from app.services.base_llm import BaseLLM
 from vertexai.generative_models import GenerativeModel, Part
 
+from app.config import Config
+from app.services.base_llm import BaseLLM
+
 config = Config()
+
 
 class GeminiLLM(BaseLLM):
     """
