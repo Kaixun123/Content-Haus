@@ -8,6 +8,7 @@ from google.oauth2.service_account import Credentials
 
 from app.api.v1.process import ProcessController
 from app.config import Config
+from app.database import DatabaseConnector
 
 app = FastAPI()
 config = Config()
@@ -36,6 +37,16 @@ try:
 except Exception as e:
     logging.error(f"Failed to instantiate bucket: {e}")
 
+database = DatabaseConnector()
+
+@app.on_event("startup")
+async def startup():
+    await database.start_database()
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect_database()
+    
 app.include_router(ProcessController().get_router())
 
 if __name__ == "__main__":
