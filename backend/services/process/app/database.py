@@ -11,18 +11,19 @@ from app.models.base import Base
 from app.models.prompt_model import PromptResponse
 
 config = Config()
-MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DB = config['mysql.user'], config['mysql.password'], config['mysql.host'], config['mysql.db']
+MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DB = config['mysql.user'], config['mysql.password'], config['mysql.host'], \
+    config['mysql.db']
 
 
 # Base = declarative_base()
 
 class DatabaseConnector:
     _instance = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DatabaseConnector, cls).__new__(cls)
-            
+
             cls._instance.databaseURL = f"mysql+aiomysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
             cls._instance.base = Base
             cls._instance.engine = create_async_engine(cls._instance.databaseURL, echo=True)

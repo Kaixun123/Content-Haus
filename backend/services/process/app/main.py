@@ -40,14 +40,17 @@ except Exception as e:
 # Initialize the database connector
 db_connector = DatabaseConnector()
 
+
 @app.on_event("startup")
 async def startup():
     await db_connector.start_database()
 
+
 @app.on_event("shutdown")
 async def shutdown():
     await db_connector.disconnect_database()
-    
+
+
 app.include_router(ProcessController().get_router())
 
 if __name__ == "__main__":
