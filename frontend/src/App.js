@@ -1,24 +1,23 @@
-import logo from './logo.svg';
 import './App.css';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import 'video-react/dist/video-react.css';
+import VideoEditor from './components/videoEditor';
+import HomePage from './components/homepage';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+  return ( 
+    <BrowserRouter>
+      <div className="App">
+        <main className="container mx-auto">
+          <Routes>
+            <Route path="/" element={<HomePage/>}/>
+            <Route path="/editor" element={<VideoEditor/>}/>
+            {/* Add more routes as needed */}
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
 
