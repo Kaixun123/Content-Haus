@@ -25,7 +25,21 @@ services:
       - 5002:80
     networks:
       - backend_network
+  
+  #########################
+  # Process Microservice
+  #########################
+  process:
+    build:
+      context: ./services/process
+      dockerfile: Dockerfile
+    container_name: process
+    ports: 
+      - 5003:80
+    networks:
+      - backend_network
 
 networks:
   backend_network:
     driver: bridge
+  

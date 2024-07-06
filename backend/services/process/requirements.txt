@@ -1,0 +1,8 @@
+fastapi==0.111.0
+pydantic==2.7.4
+uvicorn==0.30.1
+vertexai==1.49.0
+SQLAlchemy==2.0.31
+aiomysql==0.2.0
+databases==0.9.0
+greenlet==3.0.3
