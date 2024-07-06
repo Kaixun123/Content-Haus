@@ -1,0 +1,28 @@
+.logo {
+    width: 200px; /* Default width */
+  }
+  
+  /* If the viewport is 600px or less, make the logo smaller */
+  @media (max-width: 600px) {
+    .logo {
+      width: 100px;
+    }
+  }
+  
+  /* If the viewport is 400px or less, make the logo even smaller */
+  @media (max-width: 400px) {
+    .logo {
+      width: 50px;
+    }
+  }
+  
+  .search-bar {
+    position: absolute;
+    right: 0;
+    width: 50px;
+    transition: width 0.5s;
+  }
+  
+  .search-bar:focus-within {
+    width: 200px;
+  }
