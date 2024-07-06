@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Text, Integer
-from app.repository.SQLConnector import Base
+from sqlalchemy.ext.declarative import declarative_base
 
-class PromptResponse(Base):
+class PromptResponse(declarative_base()):
     __tablename__ = "prompts"
     id = Column(Integer, primary_key=True, index=True)
     key = Column(String(50), unique=True, index=True, nullable=False)
