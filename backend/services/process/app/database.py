@@ -12,22 +12,29 @@ MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DB = config['mysql.user'], config[
 Base = declarative_base()
 
 class DatabaseConnector:
-    def __init__(self):
-        self.databaseURL = f"mysql+aiomysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
-        self.base = Base
-        self.engine = create_async_engine(self.databaseURL, echo=True)
-        self.AsyncSessionLocal = sessionmaker(
-            autocommit=False,
-            autoflush=False,
-            bind=self.engine,
-            class_=AsyncSession
-        )
-        self.table_name = PromptResponse.__tablename__
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(DatabaseConnector, cls).__new__(cls)
+            
+            cls._instance.databaseURL = f"mysql+aiomysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
+            cls._instance.base = Base
+            cls._instance.engine = create_async_engine(cls._instance.databaseURL, echo=True)
+            cls._instance.AsyncSessionLocal = sessionmaker(
+                autocommit=False,
+                autoflush=False,
+                bind=cls._instance.engine,
+                class_=AsyncSession
+            )
+            cls._instance.table_name = PromptResponse.__tablename__
 
-        metadata = MetaData()
-        self.table = Table(self.table_name, metadata)
-        self.database = Database(self.databaseURL)
+            metadata = MetaData()
+            cls._instance.table = Table(cls._instance.table_name, metadata)
+            cls._instance.database = Database(cls._instance.databaseURL)
 
+        return cls._instance
+     
     async def _check_and_create_table(self):
         async with self.engine.begin() as connection:
             # Check if table exists
