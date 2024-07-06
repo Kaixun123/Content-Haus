@@ -1,6 +1,6 @@
 # routes/videoRoutes.py
 from fastapi import APIRouter, Response, status
-from scraper.scraper import fetch_hashtag_videos, fetch_trending_videos, fetch_username_videos, user_example
+from scraper.scraper import fetch_hashtag_videos, fetch_trending_videos, fetch_username_videos
 from response.VideoResponse import VideoResponse
 
 router = APIRouter()

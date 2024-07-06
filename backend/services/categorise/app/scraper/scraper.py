@@ -104,7 +104,6 @@ async def fetch_username_videos():
                 with YoutubeDL(ydl_opts) as ydl:
                     ydl.download([vid['link']])
                 
-                
             return VideoResponse(error=False, urls=videos)
 
 #to test and experiement
