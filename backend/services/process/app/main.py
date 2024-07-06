@@ -1,11 +1,13 @@
+import json
 import logging
 import os
 
-from google.cloud import storage
 from app.config import Config
 from app.services.gemini_llm import GeminiLLM
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from google.cloud import storage
+from google.oauth2.service_account import Credentials
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -17,12 +19,6 @@ logging.basicConfig(
     format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S %Z'
 )
-
-try:
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=config['google.application.credentials']
-    logging.info(f"Configuration path set: {os.environ['GOOGLE_APPLICATION_CREDENTIALS']}")
-except Exception as e:
-    logging.info(f"Failed to set credentials")
 
 # Maybe TODO: Move registration of middlewares to separate module
 # LoggingMiddleware(app)
@@ -38,7 +34,9 @@ app.add_middleware(
 # Instantiate Google Cloud Storage client
 # TODO: Use Env
 try:
-    storage_client = storage.Client()
+    credentials_info = json.loads(config['google.application.credentials'])
+    credentials = Credentials.from_service_account_info(credentials_info)
+    storage_client = storage.Client(credentials=credentials)
     BUCKET_NAME = config['bucket.name']
     logging.info(f"Instantiate bucket: {BUCKET_NAME}")
 except Exception as e:
