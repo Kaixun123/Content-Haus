@@ -1,15 +1,20 @@
-from app.models.prompt_model import PromptResponse
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import Table, MetaData
-from app.config import Config
-from databases import Database
 import logging
+
+from databases import Database
+from sqlalchemy import Table, MetaData, Column, Integer, String
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+# from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+from app.config import Config
+from app.models.base import Base
+from app.models.prompt_model import PromptResponse
 
 config = Config()
 MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DB = config['mysql.user'], config['mysql.password'], config['mysql.host'], config['mysql.db']
-Base = declarative_base()
+
+
+# Base = declarative_base()
 
 class DatabaseConnector:
     _instance = None
@@ -30,17 +35,25 @@ class DatabaseConnector:
             cls._instance.table_name = PromptResponse.__tablename__
 
             metadata = MetaData()
-            cls._instance.table = Table(cls._instance.table_name, metadata)
+            cls._instance.table = Table(
+                cls._instance.table_name,
+                metadata,
+                Column('id', Integer, primary_key=True),
+                Column('key', String(50), unique=True, index=True, nullable=False),
+                Column('prompt', String(255), nullable=False),
+                Column('response', String(255), nullable=False)
+            )
             cls._instance.database = Database(cls._instance.databaseURL)
 
         return cls._instance
-     
+
     async def _check_and_create_table(self):
         async with self.engine.begin() as connection:
             # Check if table exists
-            result = await connection.run_sync(lambda conn: self.engine.dialect.has_table(conn, self.table_name))
+            result = await connection.run_sync(self.engine.dialect.has_table, self.table_name)
             if not result:
                 logging.info(f"Creating table {self.table_name}")
+                # Create table
                 await connection.run_sync(self.base.metadata.create_all)
             else:
                 logging.info(f"Table {self.table_name} already exists")

@@ -40,6 +40,7 @@ class GeminiLLM(BaseLLM):
         logging.debug(f"Contents to send to Gemini LLM: {contents}")
         response = self.model.generate_content(contents)
         logging.debug(f"Response from Gemini LLM: {response}")
+        return response.candidates[0].content.parts[0].text
 
     def ensure_gcs_path(self, file_path):
         """

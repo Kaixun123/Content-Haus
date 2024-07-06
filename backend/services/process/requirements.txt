@@ -5,3 +5,4 @@ vertexai==1.49.0
 SQLAlchemy==2.0.31
 aiomysql==0.2.0
 databases==0.9.0
+greenlet==3.0.3

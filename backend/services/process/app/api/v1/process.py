@@ -8,6 +8,7 @@ from app.api.v1.base import RestController
 from app.config import Config
 from app.models.video_request import VideoRequest
 from app.services.gemini_llm import GeminiLLM
+from app.services.prompts import PromptService
 
 config = Config()
 
@@ -18,6 +19,7 @@ class ProcessController(RestController):
                         
                         It should be engaging and appeal to users.
                         """
+    svc = PromptService()
 
     def register_routes(self):
         @self.router.post("/process-video/")
@@ -33,10 +35,18 @@ class ProcessController(RestController):
                     model_name=config['gemini.model.name'],
                     credentials=credentials
                 )
-                logging.info("Attempting LLM prediction...")
+                logging.debug("Attempting LLM prediction...")
                 output = llm.generate_content(request.key, self.configured_prompt)
-                logging.info("Successful video process")
+                logging.debug("Successful video process")
             except Exception as e:
                 logging.error(f"Error processing video: {e}")
                 raise HTTPException(status_code=500, detail=f"Error processing video: {e}")
+
+            obj = {"key": request.key, "prompt": self.configured_prompt, "response": output}
+            try:
+                await self.svc.create(obj)
+            except Exception as e:
+                logging.error(f"Error saving prompt response: {e}")
+                raise HTTPException(status_code=500, detail=f"Error saving prompt response: {e}")
+
             return {"message": "Video processed successfully", "output": output}
