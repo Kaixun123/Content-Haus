@@ -1,18 +1,15 @@
 import json
 import logging
-import os
 
+from app.api.v1.process import ProcessController
 from app.config import Config
-from app.services.gemini_llm import GeminiLLM
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from google.cloud import storage
 from google.oauth2.service_account import Credentials
-from pydantic import BaseModel
 
 app = FastAPI()
 config = Config()
-
 
 logging.basicConfig(
     level=config['log.level'],
@@ -20,9 +17,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S %Z'
 )
 
-# Maybe TODO: Move registration of middlewares to separate module
-# LoggingMiddleware(app)
-# CorsMiddleware(app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Adjust this as needed
@@ -32,7 +26,6 @@ app.add_middleware(
 )
 
 # Instantiate Google Cloud Storage client
-# TODO: Use Env
 try:
     credentials_info = json.loads(config['google.application.credentials'])
     credentials = Credentials.from_service_account_info(credentials_info)
@@ -40,63 +33,9 @@ try:
     BUCKET_NAME = config['bucket.name']
     logging.info(f"Instantiate bucket: {BUCKET_NAME}")
 except Exception as e:
-    logging.error(f"Failed to instantiate bucket")
+    logging.error(f"Failed to instantiate bucket: {e}")
 
-# Instantiate LLM
-llm = GeminiLLM(
-    location=config['gemini.location'],
-    project=config['gemini.project.id'],
-    model_name=config['gemini.model.name'],
-)
-
-
-# Pydantic Model for Video Requests
-class VideoRequest(BaseModel):
-    key: str
-
-
-# Credentials
-# TODO: Use env variables for Google Credentials
-
-# Prompt configuration
-configured_prompt = "Analyse this video, and come up with a storyboard for recreating this video. It should be engaging and appeal to users."
-
-
-# This UUID to be stored as key in cloud bucket.
-@app.post("/process-video/")
-async def process_video(request: VideoRequest):
-    video_key = request.key
-    local_video_path = f"/tmp/{video_key.split('/')[-1]}"
-
-    # Download video from Google Cloud Storage
-    try:
-        bucket = storage_client.bucket(BUCKET_NAME)
-        blob = bucket.blob(video_key)
-        blob.download_to_filename(local_video_path)
-        logging.info("Successful video download")
-    except Exception as e:
-        logging.error(f"Error downloading video: {e}")
-        raise HTTPException(status_code=500, detail=f"Error downloading video: {e}")
-
-    # Run the Gemini model on the video
-    try:
-        logging.info("Attempting LLM prediction...")
-        output = llm.generate_content(local_video_path, configured_prompt)
-        logging.info("Successful video process")
-    except Exception as e:
-        logging.error(f"Error processing video: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing video: {e}")
-
-    # Delete the video locally
-    try:
-        os.remove(local_video_path)
-        logging.info("Video deleted")
-    except Exception as e:
-        logging.error(f"Error deleting video: {e}")
-        raise HTTPException(status_code=500, detail=f"Error deleting local video: {e}")
-
-    return {"message": "Video processed successfully", "output": output}
-
+app.include_router(ProcessController().get_router())
 
 if __name__ == "__main__":
     import uvicorn

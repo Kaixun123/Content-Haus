@@ -14,7 +14,7 @@ class BaseLLM(ABC):
         model_name (str): The name of the model.
     """
 
-    def __init__(self, location, project, model_name):
+    def __init__(self, location, project, model_name, credentials=None):
         """
         Initializes a new instance of the BaseLLM class.
 
@@ -26,6 +26,7 @@ class BaseLLM(ABC):
         self.location = location
         self.project = project
         self.model_name = model_name
+        self.credentials = credentials
         self.register_model()
 
     @abstractmethod
