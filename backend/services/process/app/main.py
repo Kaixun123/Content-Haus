@@ -1,7 +1,7 @@
 import logging
 import os
 
-import boto3
+from google.cloud import storage
 from config import Config
 from services.gemini_llm import GeminiLLM
 from fastapi import FastAPI, HTTPException
@@ -11,11 +11,15 @@ from pydantic import BaseModel
 app = FastAPI()
 config = Config()
 
+
 logging.basicConfig(
     level=config['log.level'],
     format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S %Z'
 )
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=config['google.application.credentials']
+logging.info(f"Configuration path set: {os.environ["GOOGLE_APPLICATION_CREDENTIALS"]}")
 
 # Maybe TODO: Move registration of middlewares to separate module
 # LoggingMiddleware(app)
@@ -28,10 +32,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Instantiate s3 client
+# Instantiate Google Cloud Storage client
 # TODO: Use Env
-s3_client = boto3.client('s3')
+storage_client = storage.Client()
 BUCKET_NAME = config['bucket.name']
+logging.info(f"Instantiate bucket: {BUCKET_NAME}")
 
 # Instantiate LLM
 llm = GeminiLLM(
@@ -59,22 +64,31 @@ async def process_video(request: VideoRequest):
     video_key = request.key
     local_video_path = f"/tmp/{video_key.split('/')[-1]}"
 
-    # Download video from S3
+    # Download video from Google Cloud Storage
     try:
-        s3_client.download_file(BUCKET_NAME, video_key, local_video_path)
+        bucket = storage_client.bucket(BUCKET_NAME)
+        blob = bucket.blob(video_key)
+        blob.download_to_filename(local_video_path)
+        logging.info("Successful video download")
     except Exception as e:
+        logging.error(f"Error downloading video: {e}")
         raise HTTPException(status_code=500, detail=f"Error downloading video: {e}")
 
     # Run the Gemini model on the video
     try:
+        logging.info("Attempting LLM prediction...")
         output = llm.generate_content(local_video_path, configured_prompt)
+        logging.info("Successful video process")
     except Exception as e:
+        logging.error(f"Error processing video: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing video: {e}")
 
     # Delete the video locally
     try:
         os.remove(local_video_path)
+        logging.info("Video deleted")
     except Exception as e:
+        logging.error(f"Error deleting video: {e}")
         raise HTTPException(status_code=500, detail=f"Error deleting local video: {e}")
 
     return {"message": "Video processed successfully", "output": output}
