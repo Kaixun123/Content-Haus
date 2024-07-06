@@ -5,6 +5,8 @@
 Ensure that you have placed in app a .env file for the crawling
 ```
 ms_token=<ms_token_value> # Get this from tiktok.com cookies after logging in
+GOOGLE_APPLICATION_CREDENTIALS=<your_google_credentials_json_file>
+GCP_BUCKET=<your_gcp_bucket>
 ```
 ### 1.2 Install prerequisites
 ```
