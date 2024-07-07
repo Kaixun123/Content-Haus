@@ -18,6 +18,34 @@ class ProcessController(RestController):
                         Analyse this video, and come up with a storyboard for recreating this video.
                         
                         It should be engaging and appeal to users.
+
+                        Follow the following format strictly:
+
+                        ```
+                        ## Storyboard: <Insert Video Title Here>
+
+                        **Scene 1:**
+                        * **Visual:** <Visual description>
+                        * **Audio:** <Audio description>
+                        * **Voiceover:** <Voiceover description>
+                        * **Text overlay:** <Text overlay description>
+
+                        **Scene 2:**
+                        * **Visual:** <Visual description>
+                        * **Audio:** <Audio description>
+                        * **Voiceover:** <Voiceover description>
+                        * **Text overlay:** <Text overlay description>
+
+                        ...
+
+                        **Scene N:**
+                        * **Visual:** <Visual description>
+                        * **Audio:** <Audio description>
+                        * **Voiceover:** <Voiceover description>
+                        * **Text overlay:** <Text overlay description>
+                        ```
+
+                        Do not deviate from the given format.
                         """
     svc = PromptService()
 
