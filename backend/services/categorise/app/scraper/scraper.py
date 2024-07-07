@@ -140,10 +140,10 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
                 return VideoResponse(error=False, urls=videos)
 
 async def fetch_hashtag_videos(name: str):
-    return await fetch_videos(lambda api, **kwargs: api.hashtag(name=kwargs['name']).videos(count=5), name=name)
+    return await fetch_videos(lambda api, **kwargs: api.hashtag(name=kwargs['name']).videos(count=5), type_name="hashtag", name=name)
 
 async def fetch_trending_videos():
     return await fetch_videos(lambda api, **kwargs: api.trending.videos(count=5), type_name="trending")
 
 async def fetch_username_videos(username: str):
-    return await fetch_videos(lambda api, **kwargs: api.user(username=kwargs['username']).videos(count=5), username=username)
+    return await fetch_videos(lambda api, **kwargs: api.user(username=kwargs['username']).videos(count=5), type_name="username", username=username)
