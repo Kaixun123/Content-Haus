@@ -6,16 +6,18 @@ import ReactMarkdown from 'react-markdown';
 
 // Helper function to parse markdown data
 const parseData = (data) => {
-    const scenePattern = /\*\*Scene (\d+):\*\*\n\n\* \*\*Visual:\*\* (.*?)\n\* \*\*Audio:\*\* (.*?)(?=\n\n\*\*Scene|\n\n$)/gs;
+    const scenePattern = /\*\*Scene (\d+):\*\*\n\* \*\*Visual:\*\* (.*?)\n\* \*\*Audio:\*\* (.*?)\n\* \*\*Voiceover:\*\* (.*?)\n\* \*\*Text overlay:\*\* (.*?)(?=\n\n\*\*Scene|\n\n$)/gs;
     const scenes = [];
     let match;
 
     while ((match = scenePattern.exec(data)) !== null) {
-        const [, id, visual, audio] = match;
+        const [, id, visual, audio, voiceover, textOverlay] = match;
         scenes.push({
             id: parseInt(id, 10),
             visual: visual.trim(),
-            audio: audio.trim()
+            audio: audio.trim(),
+            voiceover: voiceover.trim(),
+            textOverlay: textOverlay.trim()
         });
     }
 

@@ -17,6 +17,12 @@ function SceneCard({ scene, onEdit }) {
                 <Paragraph>
                     <Text strong>Audio:</Text> {scene.audio}
                 </Paragraph>
+                <Paragraph>
+                    <Text strong>Voiceover:</Text> {scene.voiceover}
+                </Paragraph>
+                <Paragraph>
+                    <Text strong>Text Overlay:</Text> {scene.textOverlay}
+                </Paragraph>
             </Space>
         </Card>
     );

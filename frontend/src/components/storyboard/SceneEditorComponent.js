@@ -6,9 +6,11 @@ const { TextArea } = Input;
 function SceneEditor({ scene, onSave }) {
     const [visual, setVisual] = useState(scene.visual);
     const [audio, setAudio] = useState(scene.audio);
+    const [voiceover, setVoiceover] = useState(scene.voiceover);
+    const [textOverlay, setTextOverlay] = useState(scene.textOverlay);
 
     const handleSubmit = () => {
-        onSave({ ...scene, visual, audio });
+        onSave({ ...scene, visual, audio, voiceover, textOverlay });
     };
 
     return (
@@ -24,6 +26,20 @@ function SceneEditor({ scene, onSave }) {
                 <TextArea
                     value={audio}
                     onChange={(e) => setAudio(e.target.value)}
+                    rows={4}
+                />
+            </Form.Item>
+            <Form.Item label="Voiceover">
+                <TextArea
+                    value={voiceover}
+                    onChange={(e) => setVoiceover(e.target.value)}
+                    rows={4}
+                />
+            </Form.Item>
+            <Form.Item label="Text Overlay">
+                <TextArea
+                    value={textOverlay}
+                    onChange={(e) => setTextOverlay(e.target.value)}
                     rows={4}
                 />
             </Form.Item>
