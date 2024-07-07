@@ -45,7 +45,13 @@ class ProcessController(RestController):
                         * **Text overlay:** <Text overlay description>
                         ```
 
-                        Do not deviate from the given format.
+                        Do not deviate from the given format. For each scheme, you must only include the following:
+                        1. Visual
+                        2. Audio
+                        3. Voiceover
+                        4. Text overlay
+
+                        Nothing more, nothing less.
                         """
     svc = PromptService()
 
