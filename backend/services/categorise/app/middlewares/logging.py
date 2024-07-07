@@ -2,7 +2,7 @@ import time
 import logging
 from fastapi import FastAPI, Request
 
-from app.middlewares.base import Middleware
+from middlewares.base import Middleware
 
 
 class LoggingMiddleware(Middleware):
