@@ -5,12 +5,14 @@ from io import BytesIO
 from moviepy.config import change_settings
 
 # Update the path below to the location of the magick executable
-change_settings({"IMAGEMAGICK_BINARY": "C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"})
+change_settings(
+    {"IMAGEMAGICK_BINARY": "C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"})
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 editor_bp = Blueprint('editor', __name__)
+
 
 @editor_bp.route('/upload', methods=['POST'])
 def upload_video():
@@ -25,6 +27,7 @@ def upload_video():
         file.save(filepath)
         print(f"File uploaded to {filepath}")
         return jsonify({'filename': filename, 'file_url': f'/uploads/{filename}'}), 200
+
 
 @editor_bp.route('/edit', methods=['POST'])
 def edit_video():
