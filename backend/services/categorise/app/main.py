@@ -2,9 +2,9 @@
 from fastapi import FastAPI
 import uvicorn
 
-from middlewares.logging import LoggingMiddleware
-from middlewares.cors import CorsMiddleware
-from api.v1.categorise import CategoriseRestController
+from app.middlewares.logging import LoggingMiddleware
+from app.middlewares.cors import CorsMiddleware
+from app.api.v1.categorise import CategoriseRestController
 
 description = """
 Categorise Function for Tiktok hackathon🚀

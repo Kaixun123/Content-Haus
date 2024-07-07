@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from models import Search, Video
+from app.models import Search, Video
 
 async def create_search(db: AsyncSession, type_name: str):
     search = Search(type=type_name)
