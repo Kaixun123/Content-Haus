@@ -12,7 +12,6 @@ from app.services.prompts import PromptService
 
 config = Config()
 
-
 class ProcessController(RestController):
     configured_prompt = """
                         Analyse this video, and come up with a storyboard for recreating this video.
@@ -25,6 +24,12 @@ class ProcessController(RestController):
         @self.router.post("/process-video/")
         async def process_video(request: VideoRequest):
             try:
+                # Check if the key exists in the database
+                existing_record = await self.svc.fetch(request.key)
+                if existing_record:
+                    logging.info("Video already exists, retrieving result from database");
+                    return {"message": "Video processed", "data": existing_record['response']}
+                
                 # TODO: Handle singleton LLM instance
                 credentials_info = json.loads(config['google.application.credentials'])
                 credentials = Credentials.from_service_account_info(credentials_info)
