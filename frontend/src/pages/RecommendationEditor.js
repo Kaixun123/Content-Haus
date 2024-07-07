@@ -82,6 +82,12 @@ const RecommendationEditor = () => {
       setPreviewVideoUrl(url);
       console.log("Edited video URL: ", url);
       toast.success("Video edited successfully.");
+
+      // Trigger the download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = uploadFilename;
+      link.click();
     } catch (error) {
       console.error('Error editing video:', error);
       toast.error("Error editing video.");
