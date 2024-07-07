@@ -1,11 +1,12 @@
 # routes/videoRoutes.py
 from fastapi import APIRouter, Response, status, Query
 
-from scraper.scraper import fetch_hashtag_videos, fetch_trending_videos, fetch_username_videos
+from app.scraper.scraper import fetch_hashtag_videos, fetch_trending_videos, fetch_username_videos
 from response.VideoResponse import VideoResponse
-from api.v1.base import RestController
+from app.api.v1.base import RestController
 
 router = APIRouter()
+
 
 class CategoriseRestController(RestController):
     def register_routes(self):
@@ -28,4 +29,4 @@ class CategoriseRestController(RestController):
             result = await fetch_username_videos(username=username)
             if result.error:
                 response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            return result   
+            return result
