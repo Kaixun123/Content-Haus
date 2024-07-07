@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Response, status, Query
 
 from app.scraper.scraper import fetch_hashtag_videos, fetch_trending_videos, fetch_username_videos
-from response.VideoResponse import VideoResponse
+from app.response.VideoResponse import VideoResponse
 from app.api.v1.base import RestController
 
 router = APIRouter()
@@ -25,7 +25,7 @@ class CategoriseRestController(RestController):
             return result
 
         @self.router.get("/username", response_model=VideoResponse)
-        async def username_videos(response: Response, username: str = Query(..., description="Username to search for") ):
+        async def username_videos(response: Response, username: str = Query(..., description="Username to search for")):
             result = await fetch_username_videos(username=username)
             if result.error:
                 response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
