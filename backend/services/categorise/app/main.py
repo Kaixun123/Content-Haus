@@ -4,6 +4,7 @@ import uvicorn
 from app.middlewares.logging import LoggingMiddleware
 from app.middlewares.cors import CorsMiddleware
 from app.api.v1.categorise import CategoriseRestController
+from app.api.v1.upload import UploadRestController
 
 description = """
 Categorise Function for Tiktok hackathon🚀
