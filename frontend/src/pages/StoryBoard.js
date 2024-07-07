@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Spin, notification } from 'antd';
+import { Button, Spin, notification, Layout, Typography, Space } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Storyboard from '../components/storyboard/StoryboardComponent';
+import StoryboardComponent from '../components/storyboard/StoryboardComponent';
+
+const { Header, Content } = Layout;
+const { Title } = Typography;
 
 const getStoryboard = async (storyboardKey) => {
     // Key - the bucket key for video stored in cloud
@@ -12,7 +15,7 @@ const getStoryboard = async (storyboardKey) => {
         key: storyboardKey // Set to louis.mp4 for testing purposes
     });
     return response.data;
-}
+};
 
 const StoryBoardPage = () => {
     const [loading, setLoading] = useState(true);
@@ -20,7 +23,7 @@ const StoryBoardPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const storyboardKey = null; // navigate('/storyboard', {state: {storyboardKey: 'louis.mp4;}});
+    let storyboardKey = null;
     if (location.state && location.state.storyboardKey) {
         storyboardKey = location.state.storyboardKey;
     }
@@ -40,21 +43,35 @@ const StoryBoardPage = () => {
             }
         };
         fetchStoryboard();
-    }, []);
+    }, [storyboardKey]);
 
     if (loading) {
-        return <Spin size="large" />;
+        return (
+            <Layout style={{ minHeight: '100vh' }}>
+                <Content style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <Spin size="large" />
+                </Content>
+            </Layout>
+        );
     }
 
     return (
-        <div>
-            <h1>Story Board Page</h1>
-            {storyboard && storyboard.data && <Storyboard data={storyboard.data} />}
-            <Button type="primary" onClick={() => navigate('/home')}>
-                Back to Home
-            </Button>
-        </div>
+        <Layout style={{ minHeight: '100vh' }}>
+            <Header style={{ background: '#fff', padding: '0 16px' }}>
+                <Title level={2} style={{ margin: '16px 0' }}>
+                    Storyboard
+                </Title>
+            </Header>
+            <Content style={{ padding: '0 50px', overflowY: 'auto', height: 'calc(100vh - 64px)' }}>
+                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                    {storyboard && storyboard.data && <StoryboardComponent data={storyboard.data} />}
+                    <Button type="primary" onClick={() => navigate('/home')}>
+                        Back to Home
+                    </Button>
+                </Space>
+            </Content>
+        </Layout>
     );
-}
+};
 
 export default StoryBoardPage;

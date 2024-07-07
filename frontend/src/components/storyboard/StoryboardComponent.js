@@ -1,19 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Card, Typography } from 'antd';
+import SceneEditor from './SceneEditorComponent';
+import SceneCard from './StoryboardCardComponent';
 import ReactMarkdown from 'react-markdown';
 
+// Helper function to parse markdown data
+const parseData = (data) => {
+    const scenePattern = /\*\*Scene (\d+):\*\*\n\* \*\*Visual:\*\* (.*?)\n\* \*\*Audio:\*\* (.*?)\n\* \*\*Voiceover:\*\* (.*?)\n\* \*\*Text overlay:\*\* (.*?)(?=\n\n\*\*Scene|\n\n$)/gs;
+    const scenes = [];
+    let match;
 
-// Helper function to parseMarkdown
+    while ((match = scenePattern.exec(data)) !== null) {
+        const [, id, visual, audio, voiceover, textOverlay] = match;
+        scenes.push({
+            id: parseInt(id, 10),
+            visual: visual.trim(),
+            audio: audio.trim(),
+            voiceover: voiceover.trim(),
+            textOverlay: textOverlay.trim()
+        });
+    }
+
+    return scenes;
+};
 
 // Data retrieved is in markdown
 const StoryboardComponent = ({ data }) => {
+    const [scenes, setScenes] = useState(parseData(data));
+    const [editingSceneId, setEditingSceneId] = useState(null);
+
+    const handleEditScene = (id) => {
+        setEditingSceneId(id);
+    };
+
+    const handleSaveScene = (updatedScene) => {
+        setScenes(scenes.map(scene => (scene.id === updatedScene.id ? updatedScene : scene)));
+        setEditingSceneId(null);
+    };
+
     return (
         <div>
-            {data ? (
-                <ReactMarkdown>
-                    {data}
-                </ReactMarkdown>
+            {scenes.length > 0 ? (
+                scenes.map(scene => (
+                    editingSceneId === scene.id ? (
+                        <SceneEditor key={scene.id} scene={scene} onSave={handleSaveScene} />
+                    ) : (
+                        <SceneCard key={scene.id} scene={scene} onEdit={() => handleEditScene(scene.id)} />
+                    )
+                ))
             ) : (
-                <div>No storyboard data available.</div>
+                <Card style={{ margin: '16px', padding: '16px' }}>
+                    <Typography.Paragraph>
+                        <ReactMarkdown>{data}</ReactMarkdown>
+                    </Typography.Paragraph>
+                </Card>
             )}
         </div>
     );
