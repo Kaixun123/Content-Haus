@@ -1,102 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Layout, Menu } from 'antd';
-import { Grid } from 'antd';
-import { Dropdown, Button } from 'antd';
-import { MenuOutlined } from '@ant-design/icons';
-import './Navbar.css';
-import { Link, useLocation } from 'react-router-dom';
-const { useBreakpoint } = Grid;
-const { Header } = Layout;
+import React from 'react';
 
-const getItems = () => {
-    const commonItems = [
-        { key: '1', label: 'Home', route: `/home` },
-        { key: '2', label: 'Landing', route: `/landing` },
-    ];
-
-    return commonItems;
-};
-
-const Navbar = () => {
-    const items = getItems();
-    const screens = useBreakpoint();
-    const [selectedKey, setSelectedKey] = useState([]);
-    const location = useLocation();
-
-    const dropdownMenu = (
-        <Menu
-            theme="dark"
-            mode="vertical"
-            defaultSelectedKeys={[]}
-            selectedKeys={selectedKey}
-        >
-            {items.map(item => {
-                return (
-                    <Menu.Item key={item.key}>
-                        <Link to={item.route}>
-                            {item.label}
-                        </Link>
-                    </Menu.Item>
-                );
-            })}
-        </Menu>
-    );
-
-    useEffect(() => {
-        const currentPath = location.pathname;
-        const matchingItem = items.find(item => item.route === currentPath);
-        if (matchingItem) {
-            setSelectedKey([matchingItem.key]);
-        } else {
-            setSelectedKey([]);
-        }
-    }, [location]);
-
-    return (
-        <Layout>
-            <Header
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                {/* <Link to="/home">
-                    <Logo className='logo' />
-                </Link> */}
-                {screens.xs ? (
-                    <Dropdown menu={dropdownMenu}>
-                        <Button
-                            className="menu-button"
-                            type="primary"
-                            icon={<MenuOutlined />}
-                        />
-                    </Dropdown>
-                ) : (
-                    <Menu
-                        theme="dark"
-                        mode="horizontal"
-                        defaultSelectedKeys={[]}
-                        selectedKeys={selectedKey}
-                        style={{ flex: 1 }}
-                    >
-                        {items.map(item => {
-                            return (
-                                <Menu.Item key={item.key}>
-                                    <Link to={item.route}>
-                                        {item.label}
-                                    </Link>
-                                </Menu.Item>
-                            );
-                        })}
-                    </Menu>
-                )}
-                {/* <div style={{ display: 'flex', alignItems: 'center', position: 'absolute', right: 10 }}>
-                    <Profile />
-                </div> */}
-            </Header>
-        </Layout>
+function Navbar(){
+    return(
+    <nav className="flex items-center justify-between flex-wrap bg-white-500 p-6">
+        <div className="flex items-center flex-shrink-0 mr-6">
+            <a href="/" className="flex" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-collection-play-fill h-8 w-8 mr-2" viewBox="0 0 16 16"><path d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1zm2-2a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1zM0 13a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 16 13V6a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 6zm6.258-6.437a.5.5 0 0 1 .507.013l4 2.5a.5.5 0 0 1 0 .848l-4 2.5A.5.5 0 0 1 6 12V7a.5.5 0 0 1 .258-.437"/></svg>
+                <span className="font-semibold text-xl tracking-tight">Content-Haus</span>
+            </a>
+        </div>
+        <div className="block lg:hidden">
+            <button class="flex items-center px-3 py-2 border rounded text-black-200 border-teal-400 hover:text-white hover:border-white">
+            <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/></svg>
+            </button>
+        </div>
+        <div className="w-full block flex flex-row-reverse lg:flex lg:items-center lg:w-auto">
+            <div className="text-sm lg:flex-grow">
+            <a href="/editor" className="block mt-4 lg:inline-block text-base lg:mt-0 text-black-300 hover:text-blue mr-7">
+                Upload Videos
+            </a>
+            <a href="/about-us" className="block mt-4 lg:inline-block text-base lg:mt-0 text-black-300 hover:text-blue">
+                About Us
+            </a>
+            </div>
+        </div>
+    </nav>
     );
 }
 
-export default Navbar;
+export default Navbar
