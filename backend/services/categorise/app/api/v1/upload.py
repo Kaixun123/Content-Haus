@@ -9,7 +9,6 @@ from response.UploadResponse import UploadResponse
 
 router = APIRouter()
 
-
 class UploadRestController(RestController):
     def register_routes(self):
         @self.router.post("/upload", response_model=UploadResponse)
@@ -18,5 +17,4 @@ class UploadRestController(RestController):
                 blob_name = upload_to_gcp_bucket(file)
                 return UploadResponse(key_id=blob_name)
             except Exception as e:
-                raise HTTPException(
-                    status_code=500, detail=f"An error occurred while uploading the file: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"An error occurred while uploading the file: {str(e)}")
