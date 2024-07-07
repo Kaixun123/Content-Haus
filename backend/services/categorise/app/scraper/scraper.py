@@ -91,24 +91,11 @@ async def fetch_videos(api_function, **kwargs):
                     
             return VideoResponse(error=False, urls=videos)
 
-async def fetch_hashtag_videos():
-    return await fetch_videos(lambda api, **kwargs: api.hashtag(name=kwargs['name']).videos(count=10), name="funny")
+async def fetch_hashtag_videos(name: str):
+    return await fetch_videos(lambda api, **kwargs: api.hashtag(name=kwargs['name']).videos(count=10), name=name)
 
 async def fetch_trending_videos():
     return await fetch_videos(lambda api, **kwargs: api.trending.videos(count=10))
 
-async def fetch_username_videos():
-    return await fetch_videos(lambda api, **kwargs: api.user(username=kwargs['username']).videos(count=10), username="funny_ooo")
-
-#to test and experiment
-# async def user_example():
-#     async with TikTokApi() as api:
-#         await api.create_sessions(ms_tokens=[ms_token], num_sessions=1, sleep_after=3, 
-#                                       headless=False, suppress_resource_load_types=["image", "media", "font", "stylesheet"])
-#         user = api.user("therock")
-#         user_data = await user.info()
-#         print(user_data)
-
-#         async for video in user.videos(count=30):
-#             print(video)
-#             print(video.as_dict)
+async def fetch_username_videos(username: str):
+    return await fetch_videos(lambda api, **kwargs: api.user(username=kwargs['username']).videos(count=10), username=username)
