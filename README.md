@@ -7,6 +7,8 @@ Before you begin, ensure you have met the following requirements:
 
 * You have installed the latest version of [Make](https://www.gnu.org/software/make/)
 * You have installed the latest version of [Docker](https://www.docker.com/)
+* You have installed the latest version of [Chromium](https://www.chromium.org/getting-involved/download-chromium/)
+* You have installed the latest version of [Imagemagick](https://imagemagick.org/script/download.php)
 
 ## Running Content-Haus locally
 ### For backend

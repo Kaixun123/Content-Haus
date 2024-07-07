@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.middlewares.base import Middleware
+from middlewares.base import Middleware
 
 class CorsMiddleware(Middleware):
     """
@@ -24,9 +24,9 @@ class CorsMiddleware(Middleware):
     __instance = None
     __app = None
     __origins = [
-        # allow all ports from localhost.
-        # TODO: to revisit this for proper CORS configuration
-        "http://localhost:*", 
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://tiktok-techjam-2024.web.app"
     ]
 
     def __new__(cls, app: FastAPI):

@@ -98,8 +98,7 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
                             print("Download finished, verifying the file size")
                             file_size = os.path.getsize(temp_file_path)
                             if file_size > 0:
-                                print(f"File size is {
-                                      file_size} bytes. Uploading to GCP")
+                                print(f"File size is {file_size} bytes. Uploading to GCP")
                                 upload_to_gcp(
                                     gcp_bucket, temp_file_path, gcp_link)
                                 print(

@@ -17,6 +17,7 @@ const RecommendedVid = () => {
     try {
       await axios.post('http://127.0.0.1:8000/recommendation', { videoUrl });
       toast.success('Recommendation sent successfully!');
+      navigate('/storyboard');
     } catch (error) {
       console.error('Error sending recommendation:', error);
       toast.error('Failed to send recommendation');
@@ -35,7 +36,7 @@ const RecommendedVid = () => {
           height="400"
         ></video>
       )}
-      <div className="flex space-x-4 mt-2">
+      <div className="flex space-x-4 mt-3">
         <button
           onClick={handleRetry}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"

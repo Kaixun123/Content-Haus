@@ -1,17 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactPlayer from 'react-player';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import { TextField, Button, Typography, Box, Container } from '@mui/material';
+import { TextField, Button, Typography, Box, Container, Backdrop, CircularProgress } from '@mui/material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
 
 const RecommendationEditor = () => {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadFilename, setUploadFilename] = useState('');
   const [fileUrl, setFileUrl] = useState('');
+  const [uploadFilename, setUploadFilename] = useState('');
   const [startTime, setStartTime] = useState(0);
   const [endTime, setEndTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -19,45 +18,25 @@ const RecommendationEditor = () => {
   const [textPosition, setTextPosition] = useState(0);
   const [texts, setTexts] = useState([]);
   const [previewVideoUrl, setPreviewVideoUrl] = useState('');
+  const [editedVideoBlob, setEditedVideoBlob] = useState(null);
+  const [loading, setLoading] = useState(false); // Add state to manage loading
   const playerRef = useRef(null);
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    setSelectedFile(file);
-    const localFileUrl = URL.createObjectURL(file);
-    setFileUrl(localFileUrl);
+  useEffect(() => {
+    const userUploadedUrl = "https://storage.googleapis.com/tiktok-techjam-storage/" + localStorage.getItem('user_uploaded_url');
+    if (userUploadedUrl) {
+      setFileUrl(userUploadedUrl);
+      setUploadFilename(userUploadedUrl);
+      console.log("URL retrieved from localStorage: ", userUploadedUrl);
+    }
+  }, []);
+
+  const handleUrlChange = (e) => {
+    const url = e.target.value;
+    setFileUrl(url);
     setPreviewVideoUrl(''); // Clear previous preview
-    console.log("File selected: ", file);
-
-    // Automatically upload the file after selection
-    await handleUpload(file);
-  };
-
-  const handleUpload = async (file) => {
-    if (!file) {
-      toast.error("Please select a file first.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/api/v1/editor/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      setUploadFilename(response.data.filename);
-      const uploadedFileUrl = `http://127.0.0.1:5000/uploads/${response.data.filename}`;
-      setFileUrl(uploadedFileUrl);
-      console.log("File uploaded: ", response.data.filename);
-      console.log("File URL set to: ", uploadedFileUrl);
-      toast.success("File uploaded successfully.");
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast.error("Error uploading file.");
-    }
+    setUploadFilename(url.split('/').pop()); // Extract filename from URL
+    console.log("URL entered: ", url);
   };
 
   const handleEdit = async () => {
@@ -69,9 +48,10 @@ const RecommendationEditor = () => {
     };
 
     console.log("Sending edit request with data:", editData);
+    setLoading(true); // Set loading to true when the edit process starts
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/api/v1/editor/edit', editData, {
+      const response = await axios.post('http://127.0.0.1:5000/edit', editData, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -80,17 +60,14 @@ const RecommendationEditor = () => {
 
       const url = URL.createObjectURL(new Blob([response.data], { type: 'video/mp4' }));
       setPreviewVideoUrl(url);
+      setEditedVideoBlob(new Blob([response.data], { type: 'video/mp4' })); // Store the edited video blob
       console.log("Edited video URL: ", url);
       toast.success("Video edited successfully.");
-
-      // Trigger the download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = uploadFilename;
-      link.click();
     } catch (error) {
       console.error('Error editing video:', error);
       toast.error("Error editing video.");
+    } finally {
+      setLoading(false); // Set loading to false when the edit process finishes
     }
   };
 
@@ -115,10 +92,27 @@ const RecommendationEditor = () => {
     }
   };
 
+  const downloadVideo = () => {
+    if (editedVideoBlob) {
+      const url = URL.createObjectURL(editedVideoBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = uploadFilename;
+      link.click();
+    }
+  };
+
   return (
     <Container className="App">
       <Typography variant="h3" gutterBottom>Video Editor</Typography>
-      <input type="file" onChange={handleFileChange} />
+      <TextField
+        label="Video URL"
+        fullWidth
+        variant="outlined"
+        onChange={handleUrlChange}
+        value={fileUrl}
+        sx={{ mb: 2 }}
+      />
       <ToastContainer />
       {fileUrl && (
         <Box className="editor-container" display="flex">
@@ -139,6 +133,12 @@ const RecommendationEditor = () => {
                   controls
                   className="react-player"
                 />
+                <Button
+                  className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
+                  onClick={downloadVideo}
+                >
+                  Download Edited Video
+                </Button>
               </Box>
             )}
           </Box>
@@ -186,6 +186,10 @@ const RecommendationEditor = () => {
           </Box>
         </Box>
       )}
+      <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loading}>
+        <CircularProgress color="inherit" />
+        <div className="text-white text-xl">Editing Video...</div>
+      </Backdrop>
     </Container>
   );
 };
