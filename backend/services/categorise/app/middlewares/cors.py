@@ -25,7 +25,8 @@ class CorsMiddleware(Middleware):
     __app = None
     __origins = [
         "http://localhost:3000",
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
+        "https://tiktok-techjam-2024.web.app"
     ]
 
     def __new__(cls, app: FastAPI):
