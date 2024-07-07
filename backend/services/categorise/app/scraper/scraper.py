@@ -6,9 +6,9 @@ from yt_dlp import YoutubeDL
 from google.cloud import storage
 from dotenv import load_dotenv
 
-from app.services.queries import create_search, add_video
-from app.response.VideoResponse import VideoResponse
-from app.services.database import get_db_session
+from services.queries import create_search, add_video
+from response.VideoResponse import VideoResponse
+from services.database import get_db_session
 
 # Load environment variables from .env file
 load_dotenv()
@@ -85,7 +85,7 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
                         break
 
                     gcp_link = f"{vid['author']}_{vid['id']}.mp4"
-                    
+
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
                         temp_file_path = temp_file.name
 
@@ -98,7 +98,8 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
                             print("Download finished, verifying the file size")
                             file_size = os.path.getsize(temp_file_path)
                             if file_size > 0:
-                                print(f"File size is {file_size} bytes. Uploading to GCP")
+                                print(f"File size is {
+                                      file_size} bytes. Uploading to GCP")
                                 upload_to_gcp(
                                     gcp_bucket, temp_file_path, gcp_link)
                                 print(
@@ -119,12 +120,14 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
 
                     try:
                         with YoutubeDL(ydl_opts) as ydl:
-                            info_dict = ydl.extract_info(vid['link'], download=False)
+                            info_dict = ydl.extract_info(
+                                vid['link'], download=False)
                             formats = info_dict.get('formats', [])
                             video_size = None
 
                             for f in formats:
-                                if 'filesize' in f and f['filesize'] < 5 * 1024 * 1024:  # 5MB in bytes
+                                # 5MB in bytes
+                                if 'filesize' in f and f['filesize'] < 5 * 1024 * 1024:
                                     video_size = f['filesize']
                                     break
 
@@ -133,7 +136,8 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
                                 videos.append(gcp_link)
                                 count += 1
                             else:
-                                print(f"Video {vid['id']} is larger than 5MB. Skipping download.")
+                                print(
+                                    f"Video {vid['id']} is larger than 5MB. Skipping download.")
 
                     except Exception as e:
                         print(f"Error downloading video: {e}")
