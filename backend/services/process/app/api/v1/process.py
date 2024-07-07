@@ -4,8 +4,9 @@ import logging
 from fastapi import HTTPException
 from google.oauth2.service_account import Credentials
 
-from app.api.v1.base import RestController
+from app.utils import Utils
 from app.config import Config
+from app.api.v1.base import RestController
 from app.models.video_request import VideoRequest
 from app.services.gemini_llm import GeminiLLM
 from app.services.prompts import PromptService
@@ -25,7 +26,8 @@ class ProcessController(RestController):
         async def process_video(request: VideoRequest):
             try:
                 # Check if the key exists in the database
-                existing_record = await self.svc.fetch(request.key)
+                gs_filepath = Utils.ensure_gcs_path(request.key)
+                existing_record = await self.svc.fetch(gs_filepath)
                 if existing_record:
                     logging.info("Video already exists, retrieving result from database");
                     return {"message": "Video processed", "data": existing_record['response']}
@@ -41,13 +43,13 @@ class ProcessController(RestController):
                     credentials=credentials
                 )
                 logging.debug("Attempting LLM prediction...")
-                output = llm.generate_content(request.key, self.configured_prompt)
+                output = llm.generate_content(gs_filepath, self.configured_prompt)
                 logging.debug("Successful video process")
             except Exception as e:
                 logging.error(f"Error processing video: {e}")
                 raise HTTPException(status_code=500, detail=f"Error processing video: {e}")
 
-            obj = {"key": request.key, "prompt": self.configured_prompt, "response": output}
+            obj = {"key": gs_filepath, "prompt": self.configured_prompt, "response": output}
             try:
                 await self.svc.create(obj)
             except Exception as e:
