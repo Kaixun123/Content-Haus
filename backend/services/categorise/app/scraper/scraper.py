@@ -1,6 +1,5 @@
 import os
-import io
-import sys
+import tempfile
 from TikTokApi import TikTokApi
 from playwright.async_api import async_playwright
 from yt_dlp import YoutubeDL
@@ -22,15 +21,28 @@ gcp_bucket = os.getenv('GCP_BUCKET')
 ms_token = os.environ.get("ms_token", None)  # set your own ms_token from tiktok.com cookies
 
 # Initialize GCP storage client
-def upload_to_gcp(bucket_name, source_data, destination_blob_name):
+def upload_to_gcp(bucket_name, source_file_path, destination_blob_name):
     """Uploads a file to the bucket."""
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
 
-    blob.upload_from_file(source_data, rewind=True, content_type='video/mp4')
+    blob.upload_from_filename(source_file_path, content_type='video/mp4')
 
     print(f"File uploaded to {destination_blob_name}.")
+
+class YTDLPLogger:
+    def debug(self, msg):
+        print(f"DEBUG: {msg}")
+
+    def info(self, msg):
+        print(f"INFO: {msg}")
+
+    def warning(self, msg):
+        print(f"WARNING: {msg}")
+
+    def error(self, msg):
+        print(f"ERROR: {msg}")
 
 async def fetch_videos(api_function, type_name: str, **kwargs):
     async with get_db_session() as db:
@@ -59,68 +71,60 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
                 search = await create_search(db, type_name)
 
                 videos = []
-                # Only download the top 5 videos
-                for vid in videos_info_sorted[:5]:  # Limit to top 5
-                    videos.append(vid['link'])
-                    buffer = io.BytesIO()
-                    
+                # Only download the top video
+                for vid in videos_info_sorted[:1]:  # Limit to top 1 for now
+                    gcp_link = f"{vid['author']}_{vid['id']}.mp4"
+                    videos.append(gcp_link)
+
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
+                        temp_file_path = temp_file.name
+
+                    # Ensure the file does not exist before downloading
+                    if os.path.exists(temp_file_path):
+                        os.remove(temp_file_path)
+
                     def progress_hook(d):
                         if d['status'] == 'finished':
-                            buffer.seek(0)
-                            upload_to_gcp(gcp_bucket, buffer, f"{vid['author']}_{vid['id']}.mp4")
-                            buffer.close()
-                    
+                            print("Download finished, verifying the file size")
+                            file_size = os.path.getsize(temp_file_path)
+                            if file_size > 0:
+                                print(f"File size is {file_size} bytes. Uploading to GCP")
+                                upload_to_gcp(gcp_bucket, temp_file_path, gcp_link)
+                                print(f"Video downloaded and uploaded: {gcp_link}")
+                            else:
+                                print("Downloaded file is empty. Skipping upload.")
+                        elif d['status'] == 'downloading':
+                            print(f"Downloading: {d['_percent_str']}")
+
                     ydl_opts = {
-                        'outtmpl': '-',  # Use a placeholder to force in-memory storage
+                        'outtmpl': temp_file_path,  # Save to a temporary file
                         'format': 'bestvideo+bestaudio/best',
                         'quiet': True,
                         'noplaylist': True,
                         'progress_hooks': [progress_hook],
-                        'postprocessors': [{
-                            'key': 'FFmpegVideoConvertor',
-                            'preferedformat': 'mp4',
-                        }],
+                        'logger': YTDLPLogger(),
                     }
 
-                    # Redirect stdout and stderr to null to suppress verbose output
-                    with open(os.devnull, 'w') as devnull:
-                        old_stdout = sys.stdout
-                        old_stderr = sys.stderr
-                        sys.stdout = devnull
-                        sys.stderr = devnull
-                        try:
-                            with YoutubeDL(ydl_opts) as ydl:
-                                ydl.download([vid['link']])
-                        finally:
-                            sys.stdout = old_stdout
-                            sys.stderr = old_stderr
-                    
+                    try:
+                        with YoutubeDL(ydl_opts) as ydl:
+                            ydl.download([vid['link']])
+                    except Exception as e:
+                        print(f"Error downloading video: {e}")
+
                     # Save video to DB
                     await add_video(db, search.id, vid['link'])
 
+                    # Clean up temporary file
+                    if os.path.exists(temp_file_path):
+                        os.remove(temp_file_path)
+
                 return VideoResponse(error=False, urls=videos)
 
-async def fetch_hashtag_videos():
-    return await fetch_videos(lambda api, **kwargs: api.hashtag(name=kwargs['name']).videos(count=10), type_name="hashtag", name="funny")
+async def fetch_hashtag_videos(name: str):
+    return await fetch_videos(lambda api, **kwargs: api.hashtag(name=kwargs['name']).videos(count=5), name=name)
 
 async def fetch_trending_videos():
-    return await fetch_videos(lambda api, **kwargs: api.trending.videos(count=10), type_name="trending")
+    return await fetch_videos(lambda api, **kwargs: api.trending.videos(count=5), type_name="trending")
 
-async def fetch_username_videos():
-    return await fetch_videos(lambda api, **kwargs: api.user(username=kwargs['username']).videos(count=10), type_name="username", username="funny_ooo")
-
-
-
-
-#to test and experiment
-# async def user_example():
-#     async with TikTokApi() as api:
-#         await api.create_sessions(ms_tokens=[ms_token], num_sessions=1, sleep_after=3, 
-#                                       headless=False, suppress_resource_load_types=["image", "media", "font", "stylesheet"])
-#         user = api.user("therock")
-#         user_data = await user.info()
-#         print(user_data)
-
-#         async for video in user.videos(count=30):
-#             print(video)
-#             print(video.as_dict)
+async def fetch_username_videos(username: str):
+    return await fetch_videos(lambda api, **kwargs: api.user(username=kwargs['username']).videos(count=5), username=username)
