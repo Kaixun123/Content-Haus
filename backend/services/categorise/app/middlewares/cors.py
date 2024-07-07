@@ -24,9 +24,8 @@ class CorsMiddleware(Middleware):
     __instance = None
     __app = None
     __origins = [
-        # allow all ports from localhost.
-        # TODO: to revisit this for proper CORS configuration
-        "http://localhost:*", 
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
     ]
 
     def __new__(cls, app: FastAPI):
