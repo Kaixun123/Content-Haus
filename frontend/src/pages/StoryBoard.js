@@ -12,7 +12,7 @@ const getStoryboard = async (storyboardKey) => {
     const baseURL = "http://localhost:5003";
     const storyboardURL = new URL("/process-video", baseURL);
     const response = await axios.post(storyboardURL, {
-        key: "smelly_louis.mp4" // Set to louis.mp4 for testing purposes
+        key: storyboardKey // Set to louis.mp4 for testing purposes
     });
     return response.data;
 };
