@@ -1,13 +1,15 @@
-from TikTokApi import TikTokApi
-import asyncio
-from playwright.async_api import async_playwright
-from yt_dlp import YoutubeDL
 import os
-from response.VideoResponse import VideoResponse
-from google.cloud import storage
-from dotenv import load_dotenv
 import io
 import sys
+from TikTokApi import TikTokApi
+from playwright.async_api import async_playwright
+from yt_dlp import YoutubeDL
+from google.cloud import storage
+from dotenv import load_dotenv
+
+from services.queries import create_search, add_video
+from response.VideoResponse import VideoResponse
+from services.database import get_db_session
 
 # Load environment variables from .env file
 load_dotenv()
@@ -30,72 +32,79 @@ def upload_to_gcp(bucket_name, source_data, destination_blob_name):
 
     print(f"File uploaded to {destination_blob_name}.")
 
-async def fetch_videos(api_function, **kwargs):
-    async with async_playwright():
-        async with TikTokApi() as api:
-            await api.create_sessions(ms_tokens=[ms_token], num_sessions=1, sleep_after=3, 
-                                      headless=False, suppress_resource_load_types=["image", "media", "font", "stylesheet"])
-            videos_info = []
-            async for video in api_function(api, **kwargs):
-                print("username: " + video.author.username)
-                print("video id: " + video.id)
-                print("stats: " + str(video.stats))
+async def fetch_videos(api_function, type_name: str, **kwargs):
+    async with get_db_session() as db:
+        async with async_playwright():
+            async with TikTokApi() as api:
+                await api.create_sessions(ms_tokens=[ms_token], num_sessions=1, sleep_after=3, 
+                                          headless=False, suppress_resource_load_types=["image", "media", "font", "stylesheet"])
+                videos_info = []
+                async for video in api_function(api, **kwargs):
+                    print("username: " + video.author.username)
+                    print("video id: " + video.id)
+                    print("stats: " + str(video.stats))
 
-                video_info = {
-                    "id": video.id,
-                    "link": "https://www.tiktok.com/@" + video.author.username + "/video/" + video.id,
-                    "views": video.stats['playCount'],
-                    "author": video.author.username,
-                }
-                videos_info.append(video_info)
+                    video_info = {
+                        "id": video.id,
+                        "link": "https://www.tiktok.com/@" + video.author.username + "/video/" + video.id,
+                        "views": video.stats['playCount'],
+                        "author": video.author.username,
+                    }
+                    videos_info.append(video_info)
 
-            # Sort videos by view count in descending order
-            videos_info_sorted = sorted(videos_info, key=lambda x: x['views'], reverse=True)
+                # Sort videos by view count in descending order
+                videos_info_sorted = sorted(videos_info, key=lambda x: x['views'], reverse=True)
 
-            videos = []
-            # Only download the top 10 videos
-            for vid in videos_info_sorted[:10]:  # Limit to top 10
-                videos.append(vid['link'])
-                buffer = io.BytesIO()
-                
-                def progress_hook(d):
-                    if d['status'] == 'finished':
-                        buffer.seek(0)
-                        upload_to_gcp(gcp_bucket, buffer, f"{vid['author']}_{vid['id']}.mp4")
-                        buffer.close()
-                
-                ydl_opts = {
-                    'outtmpl': '-',  # Use a placeholder to force in-memory storage
-                    'format': 'bestvideo+bestaudio/best',
-                    'quiet': True,
-                    'noplaylist': True,
-                    'progress_hooks': [progress_hook],
-                    'postprocessors': [{
-                        'key': 'FFmpegVideoConvertor',
-                        'preferedformat': 'mp4',
-                    }],
-                }
+                # Save search to DB
+                search = await create_search(db, type_name)
 
-                # Redirect stdout and stderr to null to suppress verbose output
-                with open(os.devnull, 'w') as devnull:
-                    old_stdout = sys.stdout
-                    old_stderr = sys.stderr
-                    sys.stdout = devnull
-                    sys.stderr = devnull
-                    try:
-                        with YoutubeDL(ydl_opts) as ydl:
-                            ydl.download([vid['link']])
-                    finally:
-                        sys.stdout = old_stdout
-                        sys.stderr = old_stderr
+                videos = []
+                # Only download the top 5 videos
+                for vid in videos_info_sorted[:5]:  # Limit to top 5
+                    videos.append(vid['link'])
+                    buffer = io.BytesIO()
                     
-            return VideoResponse(error=False, urls=videos)
+                    def progress_hook(d):
+                        if d['status'] == 'finished':
+                            buffer.seek(0)
+                            upload_to_gcp(gcp_bucket, buffer, f"{vid['author']}_{vid['id']}.mp4")
+                            buffer.close()
+                    
+                    ydl_opts = {
+                        'outtmpl': '-',  # Use a placeholder to force in-memory storage
+                        'format': 'bestvideo+bestaudio/best',
+                        'quiet': True,
+                        'noplaylist': True,
+                        'progress_hooks': [progress_hook],
+                        'postprocessors': [{
+                            'key': 'FFmpegVideoConvertor',
+                            'preferedformat': 'mp4',
+                        }],
+                    }
+
+                    # Redirect stdout and stderr to null to suppress verbose output
+                    with open(os.devnull, 'w') as devnull:
+                        old_stdout = sys.stdout
+                        old_stderr = sys.stderr
+                        sys.stdout = devnull
+                        sys.stderr = devnull
+                        try:
+                            with YoutubeDL(ydl_opts) as ydl:
+                                ydl.download([vid['link']])
+                        finally:
+                            sys.stdout = old_stdout
+                            sys.stderr = old_stderr
+                    
+                    # Save video to DB
+                    await add_video(db, search.id, vid['link'])
+
+                return VideoResponse(error=False, urls=videos)
 
 async def fetch_hashtag_videos(name: str):
     return await fetch_videos(lambda api, **kwargs: api.hashtag(name=kwargs['name']).videos(count=10), name=name)
 
 async def fetch_trending_videos():
-    return await fetch_videos(lambda api, **kwargs: api.trending.videos(count=10))
+    return await fetch_videos(lambda api, **kwargs: api.trending.videos(count=10), type_name="trending")
 
 async def fetch_username_videos(username: str):
     return await fetch_videos(lambda api, **kwargs: api.user(username=kwargs['username']).videos(count=10), username=username)
