@@ -3,7 +3,7 @@ import axios from 'axios';
 import ReactPlayer from 'react-player';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import { TextField, Button, Typography, Box, Container } from '@mui/material';
+import { TextField, Button, Typography, Box, Container, Backdrop, CircularProgress } from '@mui/material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
@@ -18,13 +18,15 @@ const RecommendationEditor = () => {
   const [textPosition, setTextPosition] = useState(0);
   const [texts, setTexts] = useState([]);
   const [previewVideoUrl, setPreviewVideoUrl] = useState('');
+  const [editedVideoBlob, setEditedVideoBlob] = useState(null);
+  const [loading, setLoading] = useState(false); // Add state to manage loading
   const playerRef = useRef(null);
 
   useEffect(() => {
-    const userUploadedUrl = localStorage.getItem('user_uploaded_url');
+    const userUploadedUrl = "https://storage.googleapis.com/tiktok-techjam-storage/" + localStorage.getItem('user_uploaded_url');
     if (userUploadedUrl) {
       setFileUrl(userUploadedUrl);
-      setUploadFilename(userUploadedUrl.split('/').pop()); // Extract filename from URL
+      setUploadFilename(userUploadedUrl);
       console.log("URL retrieved from localStorage: ", userUploadedUrl);
     }
   }, []);
@@ -46,9 +48,10 @@ const RecommendationEditor = () => {
     };
 
     console.log("Sending edit request with data:", editData);
+    setLoading(true); // Set loading to true when the edit process starts
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/api/v1/editor/edit', editData, {
+      const response = await axios.post('http://127.0.0.1:5000/edit', editData, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -57,17 +60,14 @@ const RecommendationEditor = () => {
 
       const url = URL.createObjectURL(new Blob([response.data], { type: 'video/mp4' }));
       setPreviewVideoUrl(url);
+      setEditedVideoBlob(new Blob([response.data], { type: 'video/mp4' })); // Store the edited video blob
       console.log("Edited video URL: ", url);
       toast.success("Video edited successfully.");
-
-      // Trigger the download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = uploadFilename;
-      link.click();
     } catch (error) {
       console.error('Error editing video:', error);
       toast.error("Error editing video.");
+    } finally {
+      setLoading(false); // Set loading to false when the edit process finishes
     }
   };
 
@@ -89,6 +89,16 @@ const RecommendationEditor = () => {
       const currentTime = playerRef.current.getCurrentTime();
       console.log("Current video time: ", currentTime);
       // Logic to update preview can be added here
+    }
+  };
+
+  const downloadVideo = () => {
+    if (editedVideoBlob) {
+      const url = URL.createObjectURL(editedVideoBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = uploadFilename;
+      link.click();
     }
   };
 
@@ -123,6 +133,12 @@ const RecommendationEditor = () => {
                   controls
                   className="react-player"
                 />
+                <Button
+                  className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
+                  onClick={downloadVideo}
+                >
+                  Download Edited Video
+                </Button>
               </Box>
             )}
           </Box>
@@ -170,6 +186,10 @@ const RecommendationEditor = () => {
           </Box>
         </Box>
       )}
+      <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loading}>
+        <CircularProgress color="inherit" />
+        <div className="text-white text-xl">Editing Video...</div>
+      </Backdrop>
     </Container>
   );
 };
