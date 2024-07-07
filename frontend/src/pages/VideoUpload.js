@@ -1,13 +1,16 @@
 import React, { useState, useRef } from 'react';
+import axios from 'axios';
 import { Player, ControlBar, PlayToggle, VolumeMenuButton } from 'video-react';
 import { useNavigate } from 'react-router-dom';
 import 'video-react/dist/video-react.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const VideoUpload = () => {
   const [videoSrc, setVideoSrc] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -16,13 +19,37 @@ const VideoUpload = () => {
     if (file) {
       const url = URL.createObjectURL(file);
       setVideoSrc(url);
-      toast.success('Video uploaded successfully!');
+      await uploadFile(file);
     }
   };
 
-  const handleVideo = async () => {
-    // TODO: add proper functions for the uploading process
-    // recommend using moviePY for movie editing 
+  const uploadFile = async (file) => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post('http://localhost:8000/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.key_id) {
+        localStorage.setItem('user_uploaded_url', response.data.key_id);
+        toast.success('Video uploaded successfully!');
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      toast.error('Failed to upload video');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVideo = () => {
     navigate('/preference', { state: { videoSrc } });
   };
 
@@ -49,6 +76,7 @@ const VideoUpload = () => {
             if (file) {
               const url = URL.createObjectURL(file);
               setVideoSrc(url);
+              await uploadFile(file);
             }
           }}
           onClick={() => fileInputRef.current.click()}
@@ -62,7 +90,7 @@ const VideoUpload = () => {
           />
         </div>
       )}
-       {videoSrc && (
+      {videoSrc && (
         <div className="mb-4 mt-4" style={{ width: '85%', height: '60%' }}>
           <Player src={videoSrc} fluid={false} width="100%" height="100%">
             <ControlBar autoHide={false}>
@@ -72,7 +100,6 @@ const VideoUpload = () => {
           </Player>
         </div>
       )}
-
       {videoSrc && (
         <button
           onClick={handleVideo}
@@ -80,6 +107,12 @@ const VideoUpload = () => {
         >
           Proceed
         </button>
+      )}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-75">
+          <CircularProgress className='mr-2' />
+          <div className="text-white text-xl mt-4">Uploading Video...</div>
+        </div>
       )}
     </div>
   );
