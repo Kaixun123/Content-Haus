@@ -63,7 +63,7 @@ class ProcessController(RestController):
                 gs_filepath = Utils.ensure_gcs_path(request.key)
                 existing_record = await self.svc.fetch(gs_filepath)
                 if existing_record:
-                    logging.info("Video already exists, retrieving result from database");
+                    logging.info("Video already exists, retrieving result from database")
                     return {"message": "Video processed", "data": existing_record['response']}
                 
                 # TODO: Handle singleton LLM instance
@@ -90,4 +90,4 @@ class ProcessController(RestController):
                 logging.error(f"Error saving prompt response: {e}")
                 raise HTTPException(status_code=500, detail=f"Error saving prompt response: {e}")
 
-            return {"message": "Video processed successfully", "output": output}
+            return {"message": "Video processed successfully", "data": output}
