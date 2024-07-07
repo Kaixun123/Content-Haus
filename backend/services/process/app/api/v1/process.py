@@ -4,8 +4,9 @@ import logging
 from fastapi import HTTPException
 from google.oauth2.service_account import Credentials
 
-from app.api.v1.base import RestController
+from app.utils import Utils
 from app.config import Config
+from app.api.v1.base import RestController
 from app.models.video_request import VideoRequest
 from app.services.gemini_llm import GeminiLLM
 from app.services.prompts import PromptService
@@ -17,6 +18,40 @@ class ProcessController(RestController):
                         Analyse this video, and come up with a storyboard for recreating this video.
                         
                         It should be engaging and appeal to users.
+
+                        Follow the following format strictly:
+
+                        ```
+                        ## Storyboard: <Insert Video Title Here>
+
+                        **Scene 1:**
+                        * **Visual:** <Visual description>
+                        * **Audio:** <Audio description>
+                        * **Voiceover:** <Voiceover description>
+                        * **Text overlay:** <Text overlay description>
+
+                        **Scene 2:**
+                        * **Visual:** <Visual description>
+                        * **Audio:** <Audio description>
+                        * **Voiceover:** <Voiceover description>
+                        * **Text overlay:** <Text overlay description>
+
+                        ...
+
+                        **Scene N:**
+                        * **Visual:** <Visual description>
+                        * **Audio:** <Audio description>
+                        * **Voiceover:** <Voiceover description>
+                        * **Text overlay:** <Text overlay description>
+                        ```
+
+                        Do not deviate from the given format. For each scheme, you must only include the following:
+                        1. Visual
+                        2. Audio
+                        3. Voiceover
+                        4. Text overlay
+
+                        Nothing more, nothing less.
                         """
     svc = PromptService()
 
@@ -25,9 +60,10 @@ class ProcessController(RestController):
         async def process_video(request: VideoRequest):
             try:
                 # Check if the key exists in the database
-                existing_record = await self.svc.fetch(request.key)
+                gs_filepath = Utils.ensure_gcs_path(request.key)
+                existing_record = await self.svc.fetch(gs_filepath)
                 if existing_record:
-                    logging.info("Video already exists, retrieving result from database");
+                    logging.info("Video already exists, retrieving result from database")
                     return {"message": "Video processed", "data": existing_record['response']}
                 
                 # TODO: Handle singleton LLM instance
@@ -41,17 +77,17 @@ class ProcessController(RestController):
                     credentials=credentials
                 )
                 logging.debug("Attempting LLM prediction...")
-                output = llm.generate_content(request.key, self.configured_prompt)
+                output = llm.generate_content(gs_filepath, self.configured_prompt)
                 logging.debug("Successful video process")
             except Exception as e:
                 logging.error(f"Error processing video: {e}")
                 raise HTTPException(status_code=500, detail=f"Error processing video: {e}")
 
-            obj = {"key": request.key, "prompt": self.configured_prompt, "response": output}
+            obj = {"key": gs_filepath, "prompt": self.configured_prompt, "response": output}
             try:
                 await self.svc.create(obj)
             except Exception as e:
                 logging.error(f"Error saving prompt response: {e}")
                 raise HTTPException(status_code=500, detail=f"Error saving prompt response: {e}")
 
-            return {"message": "Video processed successfully", "output": output}
+            return {"message": "Video processed successfully", "data": output}

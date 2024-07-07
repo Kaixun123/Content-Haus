@@ -3,6 +3,7 @@ import logging
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part
 
+from app.utils import Utils
 from app.config import Config
 from app.services.base_llm import BaseLLM
 
@@ -33,7 +34,7 @@ class GeminiLLM(BaseLLM):
         self.model = GenerativeModel(self.model_name)
 
     def generate_content(self, video_file_uri, prompt):
-        valid_gs_path = self.ensure_gcs_path(video_file_uri)
+        valid_gs_path = Utils.ensure_gcs_path(video_file_uri)
         logging.debug(f"Valid Google Cloud Storage path: {valid_gs_path}")
         video_file = Part.from_uri(valid_gs_path, mime_type="video/mp4")
         contents = [video_file, prompt]
@@ -41,21 +42,3 @@ class GeminiLLM(BaseLLM):
         response = self.model.generate_content(contents)
         logging.debug(f"Response from Gemini LLM: {response}")
         return response.candidates[0].content.parts[0].text
-
-    def ensure_gcs_path(self, file_path):
-        """
-        Ensure the file path is a valid Google Cloud Storage path.
-
-        Parameters
-        ----------
-        file_path : str
-            The file path to check and modify if necessary.
-
-        Returns
-        -------
-        str
-            The file path, modified to be a valid Google Cloud Storage path if it wasn't already.
-        """
-        if not file_path.startswith("gs://"):
-            return f"gs://{config['bucket.name']}/{file_path}"
-        return file_path
