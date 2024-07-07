@@ -1,4 +1,3 @@
-# main.py
 from fastapi import FastAPI
 import uvicorn
 
@@ -13,10 +12,11 @@ Categorise Function for Tiktok hackathon🚀
 
 Functions:
 
-* **Get trending** (_/trending - Download and get the latest trending videos in tiktok_)
-* **Get by hashtag** (_/hashtag - Get the latest hashtag popular videos in tiktok_)
+* **GET - Get trending** (_/trending - Download and get the latest trending videos in tiktok_)
+* **GET - Get by hashtag** (_/hashtag?hashtag=<hashtagVal> - Get the latest hashtag popular videos in tiktok_)
+* **GET - Get by username** (_/username?username=<usernameVal> - Get the popular videos from username_)
+* **POST - Upload videos** (_/upload (Body - file)- Upload videos to gcp_)
 """
-
 
 app = FastAPI(
     title="Categorise Function",
@@ -27,6 +27,7 @@ LoggingMiddleware(app)
 CorsMiddleware(app)
 
 app.include_router(CategoriseRestController().get_router())
+app.include_router(UploadRestController().get_router())
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
