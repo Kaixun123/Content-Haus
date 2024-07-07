@@ -45,7 +45,7 @@ const TikTokVidRetrieval = () => {
     try {
       const response = await axios.get(endpoint);
       setVideos(response.data);
-      navigate('/recommendations', { state: { videoSrc } });
+      navigate('/recommendation', { state: { videoSrc } });
     } catch (error) {
       console.error('Error fetching videos:', error);
     }

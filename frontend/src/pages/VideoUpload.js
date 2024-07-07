@@ -1,7 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { Player, ControlBar, PlayToggle, VolumeMenuButton } from 'video-react';
-import { Modal } from '@mui/base/Modal';
-import { styled } from '@mui/system';
 import { useNavigate } from 'react-router-dom';
 import 'video-react/dist/video-react.css';
 import { ToastContainer, toast } from 'react-toastify';
