@@ -71,11 +71,15 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
                 search = await create_search(db, type_name)
 
                 videos = []
-                # Only download the top video
-                for vid in videos_info_sorted[:1]:  # Limit to top 1 for now
-                    gcp_link = f"{vid['author']}_{vid['id']}.mp4"
-                    videos.append(gcp_link)
+                count = 0  # To keep track of successfully processed videos
 
+                # Keep downloading videos until we have 3 valid videos
+                for vid in videos_info_sorted:
+                    if count >= 3:
+                        break
+
+                    gcp_link = f"{vid['author']}_{vid['id']}.mp4"
+                    
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
                         temp_file_path = temp_file.name
 
@@ -107,7 +111,22 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
 
                     try:
                         with YoutubeDL(ydl_opts) as ydl:
-                            ydl.download([vid['link']])
+                            info_dict = ydl.extract_info(vid['link'], download=False)
+                            formats = info_dict.get('formats', [])
+                            video_size = None
+
+                            for f in formats:
+                                if 'filesize' in f and f['filesize'] < 5 * 1024 * 1024:  # 5MB in bytes
+                                    video_size = f['filesize']
+                                    break
+
+                            if video_size and video_size < 5 * 1024 * 1024:
+                                ydl.download([vid['link']])
+                                videos.append(gcp_link)
+                                count += 1
+                            else:
+                                print(f"Video {vid['id']} is larger than 5MB. Skipping download.")
+
                     except Exception as e:
                         print(f"Error downloading video: {e}")
 
@@ -121,10 +140,10 @@ async def fetch_videos(api_function, type_name: str, **kwargs):
                 return VideoResponse(error=False, urls=videos)
 
 async def fetch_hashtag_videos(name: str):
-    return await fetch_videos(lambda api, **kwargs: api.hashtag(name=kwargs['name']).videos(count=5), name=name)
+    return await fetch_videos(lambda api, **kwargs: api.hashtag(name=kwargs['name']).videos(count=5), type_name="hashtag", name=name)
 
 async def fetch_trending_videos():
     return await fetch_videos(lambda api, **kwargs: api.trending.videos(count=5), type_name="trending")
 
 async def fetch_username_videos(username: str):
-    return await fetch_videos(lambda api, **kwargs: api.user(username=kwargs['username']).videos(count=5), username=username)
+    return await fetch_videos(lambda api, **kwargs: api.user(username=kwargs['username']).videos(count=5), type_name="username", username=username)
