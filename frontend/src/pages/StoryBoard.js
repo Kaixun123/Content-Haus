@@ -12,7 +12,7 @@ const getStoryboard = async (storyboardKey) => {
     const baseURL = "http://localhost:5003";
     const storyboardURL = new URL("/process-video", baseURL);
     const response = await axios.post(storyboardURL, {
-        key: "louis.mp4" // Set to louis.mp4 for testing purposes
+        key: "smelly_louis.mp4" // Set to louis.mp4 for testing purposes
     });
     return response.data;
 };
@@ -59,7 +59,7 @@ const StoryBoardPage = () => {
         <Layout style={{ minHeight: '100vh' }}>
             <Header style={{ background: '#fff', padding: '0 16px' }}>
                 <Title level={2} style={{ margin: '16px 0' }}>
-                    Storyboard Editor
+                    Storyboard
                 </Title>
             </Header>
             <Content style={{ padding: '0 50px', overflowY: 'auto', height: 'calc(100vh - 64px)' }}>
