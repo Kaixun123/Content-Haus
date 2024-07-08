@@ -3,7 +3,7 @@ import axios from 'axios';
 import ReactPlayer from 'react-player';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import { TextField, Button, Typography, Box, Container, Backdrop, CircularProgress } from '@mui/material';
+import { TextField, Button, Typography, Box, Container, Backdrop, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../App.css';
@@ -19,7 +19,8 @@ const RecommendationEditor = () => {
   const [texts, setTexts] = useState([]);
   const [previewVideoUrl, setPreviewVideoUrl] = useState('');
   const [editedVideoBlob, setEditedVideoBlob] = useState(null);
-  const [loading, setLoading] = useState(false); // Add state to manage loading
+  const [loading, setLoading] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false); // Add state to manage dialog
   const playerRef = useRef(null);
 
   useEffect(() => {
@@ -63,6 +64,7 @@ const RecommendationEditor = () => {
       setEditedVideoBlob(new Blob([response.data], { type: 'video/mp4' })); // Store the edited video blob
       console.log("Edited video URL: ", url);
       toast.success("Video edited successfully.");
+      setOpenDialog(true); // Open the dialog when edit is complete
     } catch (error) {
       console.error('Error editing video:', error);
       toast.error("Error editing video.");
@@ -102,6 +104,10 @@ const RecommendationEditor = () => {
     }
   };
 
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
   return (
     <Container className="App">
       <Typography variant="h3" gutterBottom>Video Editor</Typography>
@@ -125,22 +131,6 @@ const RecommendationEditor = () => {
               onProgress={handleProgress}
               className="react-player"
             />
-            {previewVideoUrl && (
-              <Box mt={4}>
-                <Typography variant="h6">Edited Video Preview:</Typography>
-                <ReactPlayer
-                  url={previewVideoUrl}
-                  controls
-                  className="react-player"
-                />
-                <Button
-                  className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
-                  onClick={downloadVideo}
-                >
-                  Download Edited Video
-                </Button>
-              </Box>
-            )}
           </Box>
           <Box className="editor-options" flex={1}>
             <Typography variant="h6">Select Start and End Time:</Typography>
@@ -190,6 +180,22 @@ const RecommendationEditor = () => {
         <CircularProgress color="inherit" />
         <div className="text-white text-xl">Editing Video...</div>
       </Backdrop>
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+        <DialogTitle>Edited Video Preview</DialogTitle>
+        <DialogContent>
+          {previewVideoUrl && (
+            <ReactPlayer
+              url={previewVideoUrl}
+              controls
+              className="react-player"
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={downloadVideo} color="primary" variant="contained">Download Edited Video</Button>
+          <Button onClick={handleCloseDialog} color="secondary" variant="contained">Close</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
