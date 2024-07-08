@@ -13,11 +13,11 @@ const RecommendedVid = () => {
     navigate('/preference');
   };
 
+  const bucket = "https://storage.googleapis.com/tiktok-techjam-storage/";
+
   const handleSubmitRecommendation = async () => {
     try {
-      await axios.post('http://127.0.0.1:8000/recommendation', { videoUrl });
-      toast.success('Recommendation sent successfully!');
-      navigate('/storyboard');
+      navigate('/storyboard', { state: { videoUrl: videoUrl } });
     } catch (error) {
       console.error('Error sending recommendation:', error);
       toast.error('Failed to send recommendation');
@@ -30,7 +30,7 @@ const RecommendedVid = () => {
       <h1 className="text-4xl mb-4">Here's Your Recommendation!</h1>
       {videoUrl && (
         <video
-          src={`https://storage.googleapis.com/tiktok-techjam-storage/${videoUrl}`}
+          src={`${bucket}${videoUrl}`}
           controls
           width="300"
           height="400"
@@ -52,7 +52,6 @@ const RecommendedVid = () => {
       </div>
     </div>
   );
-
 };
 
 export default RecommendedVid;
