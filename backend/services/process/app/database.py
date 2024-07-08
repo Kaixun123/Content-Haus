@@ -40,7 +40,7 @@ class DatabaseConnector:
                 cls._instance.table_name,
                 metadata,
                 Column('id', Integer, primary_key=True),
-                Column('key', String(50), unique=True, index=True, nullable=False),
+                Column('key', String(255), unique=True, index=True, nullable=False),
                 Column('prompt', String(255), nullable=False),
                 Column('response', String(255), nullable=False)
             )
